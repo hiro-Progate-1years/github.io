@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tetris</title>
+  <link rel="stylesheet" type="text/css" href="tetris.css">
+</head>
+<body>
+  <div class="tetris-wrapper">
+    <div class="board-area">
+      <div class="title">
+        <h1>TETRIS</h1>
+      </div>
+      <canvas id="board"></canvas>
+      <div class="overlay show" id="overlay">
+        <p id="overlay-title">TETRIS</p>
+        <p id="overlay-message">矢印キーで操作、Spaceで一気に落下</p>
+        <button class="btn" id="start-btn">スタート</button>
+      </div>
+    </div>
+    <div class="side-panel">
+      <div class="panel-box">
+        <h2>NEXT</h2>
+        <canvas id="next" width="120" height="100"></canvas>
+      </div>
+      <div class="panel-box">
+        <h2>SCORE</h2>
+        <div class="value" id="score">0</div>
+      </div>
+      <div class="panel-box">
+        <h2>LEVEL</h2>
+        <div class="value" id="level">1</div>
+      </div>
+      <div class="panel-box">
+        <h2>LINES</h2>
+        <div class="value" id="lines">0</div>
+      </div>
+      <div class="panel-box controls-box">
+        <h2>CONTROLS</h2>
+        <p>← → : 移動</p>
+        <p>↑ : 回転</p>
+        <p>↓ : ソフトドロップ</p>
+        <p>Space : ハードドロップ</p>
+        <p>P : ポーズ</p>
+      </div>
+      <a class="back-link" href="index.html">← トップページへ戻る</a>
+    </div>
+  </div>
+  <script src="tetris.js"></script>
+</body>
+</html>
