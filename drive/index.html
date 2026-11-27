@@ -251,8 +251,8 @@ button.primary:active{transform:translateY(2px);box-shadow:0 1px 0 #c57f00}
       <b>あそびかた</b><br>
       🎲 サイコロをふって日本中の道をドライブ。光ったマスから止まる場所を選べるよ。<br>
       🏁 <b>目的地</b>に一番乗りすると賞金ゲット！<br>
-      ⛽ <b>ガソリン</b>は1マス1L。都市かSAに止まると自動で給油。空になるとガス欠！<br>
-      🏪 都市の<b>お店</b>を買うと毎年3月に収益が入る。全部買い占めると2倍！ <b>ガソリンスタンド</b>を持っていると、ライバルの給油代が自分に入る。<br>
+      ⛽ <b>ガソリン</b>は1マス1L。都市かSAに止まると<b>無料で満タン</b>。空になるとガス欠で出張費がかかる！<br>
+      🏪 都市の<b>お店</b>を買うと毎年3月に収益が入る。全部買い占めると2倍！ <b>ガソリンスタンド</b>を持っていると、ライバルが給油するたびに手数料が入り、ガス欠のときは無料でレッカーしてもらえる。<br>
       📦 都市で<b>配達の依頼</b>を受けて、名産品を届け先まで運ぶと報酬！<br>
       🚙 地図の<b>🚙マークの都市</b>（カーディーラー）で車を買いかえ！ ワゴン・トラックは荷物をたくさん積める、SUVは雪に強い、スポーツカーはサイコロ+1個！<br>
       🏁 目的地には<b>ぴったりの目</b>で止まらないと到着にならないよ（通りすぎはダメ）<br>
@@ -506,7 +506,7 @@ const CARDS = {
   buyout:{ic:'🤝',name:'買収',desc:'今いる都市のライバルのお店を1.5倍の値段で買い取る',price:5000},
   copy:  {ic:'📠',name:'コピー',desc:'持っているカードを1枚コピーする',price:2500},
   lucky: {ic:'🎁',name:'福袋',desc:'カードが3枚もらえる',price:3500},
-  freegas:{ic:'🎫',name:'給油無料パス',desc:'3か月のあいだガソリン代がタダ',price:2000},
+  freegas:{ic:'🎫',name:'ガス欠保険',desc:'3か月のあいだ、ガス欠してもロードサービスがタダ',price:2000},
   ghostsend:{ic:'📮',name:'ゴースト宅配便',desc:'ブスブスを好きなライバルに送りつける',price:8000},
   debt:  {ic:'📜',name:'借金帳消し',desc:'借金がある人の借金をゼロにする（全員）',price:0},
   omamori:{ic:'🔰',name:'お守り',desc:'ブスブスのいたずらを1回防ぐ（持ってるだけで自動）',price:1500,passive:true},
@@ -1420,7 +1420,7 @@ async function moveFlow(i,steps){
   const want=steps;
   steps=Math.min(steps,p.fuel);
   if(steps<want){
-    if(steps===0){await gasOut(i);return}
+    if(steps===0){if(await gasOut(i)) await cityVisit(i,p.pos);return}
     await say(`⛽ ガソリンが足りない！ <b>${steps}マス</b>しか進めない…`,{title:'⛽ ガソリン不足'});
   }
   const ends=computeEndpoints(p.pos,steps);
@@ -1432,31 +1432,44 @@ async function moveFlow(i,steps){
   const path=ends.get(target);
   await animateMove(i,path);
   p.fuel=Math.max(0,p.fuel-path.length); renderHUD();
-  if(p.fuel===0 && steps<want){await gasOut(i)}
+  if(p.fuel===0 && steps<want){if(await gasOut(i)){await cityVisit(i,p.pos);return}}
   await landOn(i,target);
 }
 async function gasOut(i){
-  sfx('bad');
-  const p=G.players[i], fee=round100(500*yf());
-  await say(`💨 ガス欠！ ロードサービスを呼んで 8L 入れてもらった。<br>出張費 <b style="color:#eb5757">${fmt(fee)}</b>`,{title:'⛽ ガス欠'});
-  p.fuel=8; await pay(i,fee);
+  sfx('bad'); fxShake();
+  const p=G.players[i];
+  // オーナー特典：自分のスタンドがある一番近い都市へ無料でレッカー
+  const D=distFrom(p.pos), mine=CITY_NODES.filter(c=>G.owner[NODES[c].gas]===i).sort((a,b)=>D[a]-D[b]);
+  if(mine.length){
+    const to=mine[0];
+    await fxBanner('blue','🚚','ガス欠！ でも…',`自社スタンドのレッカーが${NODES[to].name}まで無料で運んでくれた！`,2000);
+    log(`🚚 ${p.name}：ガス欠→自社スタンドのある${NODES[to].name}へ無料レッカー`);
+    p.pos=to; p.fuel=CARS[p.car].tank; renderAll(); focusNode(to); return true;
+  }
+  if(p.freeGas!=null&&p.freeGas>=mi()){
+    p.fuel=8; renderHUD(); log(`🎫 ${p.name}：ガス欠保険でロードサービス無料`);
+    await fxBanner('blue','🎫','ガス欠…でも保険でタダ！','ロードサービスが 8L 入れてくれた',1800); return false;
+  }
+  const fee=round100(1000*yf()*fuelMult());
+  fxFloat(p.pos,'-'+fmt(fee),'#eb5757');
+  await say(`💨 ガス欠！ ロードサービスを呼んで 8L 入れてもらった。<br>出張費 <b style="color:#eb5757">${fmt(fee)}</b><br><small>（どこかのガソリンスタンドを持っていると、ガス欠のとき無料でそこまでレッカーしてもらえるよ）</small>`,{title:'⛽ ガス欠'});
+  p.fuel=8; await pay(i,fee); return false;
 }
 // 給油（都市のスタンド or SA）
 async function refuel(i,node){
   const p=G.players[i], n=NODES[node], tank=CARS[p.car].tank;
-  let liters=tank-p.fuel; if(liters<=0) return;
-  const unit=FUEL_PRICE*yf()*(n.type==='sa'?1.3:1)*fuelMult();
+  const liters=tank-p.fuel; if(liters<=0) return;
+  p.fuel=tank; sfx('gas');
   const owner=n.type==='city'?G.owner[n.gas]:undefined;
-  if(owner===i||(p.freeGas!=null&&p.freeGas>=mi())){p.fuel=tank;renderHUD();sfx('gas');await toast(`⛽ ${owner===i?'自分のスタンド':'🎫無料パス'}で満タン！（タダ）`,900);return}
-  if(p.money<=0) return;
-  liters=Math.min(liters,Math.floor(p.money/unit)); if(liters<=0) return;
-  const cost=round100(liters*unit);
-  p.fuel+=liters; p.money-=cost; sfx('gas');
   let to='';
-  if(owner!=null){G.players[owner].money+=cost;to=`<br><small>→ ${esc(G.players[owner].name)}のスタンドの売上に</small>`}
+  if(owner!=null&&owner!==i){
+    const fee=round100(liters*FUEL_PRICE*yf()*fuelMult());
+    G.players[owner].money+=fee;
+    to=`<br><small>→ ${esc(G.players[owner].name)}のスタンドに手数料 +${fmt(fee)}</small>`;
+    log(`⛽ ${p.name} が${n.name}で給油（${G.players[owner].name}のスタンドに手数料 +${fmt(fee)}）`);
+  }
   renderHUD();
-  log(`⛽ ${p.name} が${liters}L給油 ${fmt(cost)}${owner!=null?'（'+G.players[owner].name+'のスタンド）':''}`);
-  await toast(`⛽ ${esc(p.name)} ${liters}L給油　-${fmt(cost)}${to}`,1100);
+  await toast(`⛽ ${esc(p.name)} 満タン！（無料）${to}`,owner!=null&&owner!==i?1100:700);
 }
 // 配達
 function makeJobs(node){
@@ -1541,7 +1554,7 @@ async function landOn(i,node){
     case 'blue':{
       sfx('coin');
       const m=round100(rand(3,15)*100*yf()*(G.month>=7&&G.month<=8?1.5:1)*(!p.human&&G.cpuLv===2?1.3:1));
-      const why=pick(['道の駅で野菜が売れた','ドライブ動画がバズった','ガソリン代がキャッシュバック','ご当地グルメ大会で優勝','車の中から へそくり発見','観光客に道案内してお礼']);
+      const why=pick(['道の駅で野菜が売れた','ドライブ動画がバズった','ドライブ動画の広告収入','ご当地グルメ大会で優勝','車の中から へそくり発見','観光客に道案内してお礼']);
       p.money+=m; renderHUD(); log(`🔵 ${p.name}：${why} +${fmt(m)}`);
       fxCoins(m>=1000*yf()?26:14); fxFloat(node,'+'+fmt(m),'#2f80ed');
       await fxBanner('blue','💰','+'+fmt(m),why);
@@ -1655,7 +1668,7 @@ function shopRow(sid,i){
   let right;
   if(o!=null) right=`<span class="own" style="background:${G.players[o].color}">${esc(G.players[o].name)}</span>`;
   else right=`<button class="primary" data-buy="${sid}" ${p.money<buyPrice(i,sid)?'disabled':''}>${p.coupon?'半額 '+fmt(buyPrice(i,sid)):'買う'}</button>`;
-  return `<div class="shop"><div class="n"><b>${s.name}</b><small>${fmt(s.price)}　収益率${s.rate}%（年${fmt(inc)}）${s.gas?'<br>＋ライバルがここで給油した代金が入る':''}</small></div>${right}</div>`;
+  return `<div class="shop"><div class="n"><b>${s.name}</b><small>${fmt(s.price)}　収益率${s.rate}%（年${fmt(inc)}）${s.gas?'<br>＋ライバルがここで給油すると手数料が入る／ガス欠のとき無料レッカー':''}</small></div>${right}</div>`;
 }
 async function cityVisit(i,node){
   const p=G.players[i];
@@ -1915,7 +1928,7 @@ async function useCard(i,idx){
       renderHUD(); await say(`🎁 福袋の中身は…<br>${got.join('<br>')||'からっぽ（手札がいっぱい）'}`); return null;}
     case 'freegas':
       p.freeGas=mi()+2; p.fuel=CARS[p.car].tank; renderHUD();
-      await say(`🎫 給油無料パス！ 3か月のあいだガソリン代がタダ（今すぐ満タン！）`); return null;
+      await say(`🎫 ガス欠保険に加入！ 3か月のあいだ、ガス欠してもロードサービスがタダ（おまけで満タン！）`); return null;
     case 'ghostsend':{
       const cand=G.players.map((q,j)=>j).filter(j=>j!==G.ghost.holder); let t;
       if(p.human) t=await modal({title:'📮 ブスブスをだれに送る？',buttons:cand.map(j=>({label:esc(G.players[j].name),value:j,cls:'primary'}))});
@@ -2083,7 +2096,7 @@ async function monthEvent(){
       await news(`🚧 道路工事のお知らせ<br><b>${edgeName(k)}</b> が2か月間 通行止めになります`,'🚧 道路工事');break;}
     case 'oil':{
       const up=Math.random()<.55; G.fx.oil=up?1.8:.5; G.fx.oilUntil=mi()+2; renderAll();
-      await news(up?`🛢️ 原油価格が高騰！ 3か月間 ガソリン代が<b>1.8倍</b>に…<br><small>ガソリンスタンドのオーナーはウハウハ</small>`:`🛢️ 原油が値下がり！ 3か月間 ガソリン代が<b>半額</b>！`,'🛢️ 原油価格');break;}
+      await news(up?`🛢️ 原油価格が高騰！ 3か月間、ガス欠したときの出張費が<b>1.8倍</b>に…<br><small>ガソリンスタンドの手数料も1.8倍で、オーナーはウハウハ</small>`:`🛢️ 原油が値下がり！ 3か月間、ガス欠の出張費が<b>半額</b><br><small>（スタンドの手数料も半分に）</small>`,'🛢️ 原油価格');break;}
     case 'sale':{
       G.fx.sale=mi(); renderAll();
       await news(`🎉 全国のカーディーラーで<b>新車フェア</b>！<br>今月はどの車も<b>3割引き</b>（${DEALERS.join('・')}）`,'🎉 新車フェア');break;}
