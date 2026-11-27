@@ -235,7 +235,7 @@ button.primary:active{transform:translateY(2px);box-shadow:0 1px 0 #c57f00}
       📦 都市で<b>配達の依頼</b>を受けて、名産品を届け先まで運ぶと報酬！<br>
       🚙 地図の<b>🚙マークの都市</b>（カーディーラー）で車を買いかえ！ ワゴン・トラックは荷物をたくさん積める、SUVは雪に強い、スポーツカーはサイコロ+1個！<br>
       🏁 目的地には<b>ぴったりの目</b>で止まらないと到着にならないよ（通りすぎはダメ）<br>
-      💗 <b>人生マス</b>で人生ルーレット！ 結婚・家族がふえる・マイホーム…家族は車に乗って決算でボーナス！<br>
+      💗 <b>人生マス</b>で人生ルーレット！ 結婚・家族がふえる・TV取材・マイホーム…家族は車に乗って決算でボーナス！<br>
       🔵 青マス＝お金がもらえる　🔴 赤マス＝お金がへる　🟡 黄マス＝カードがもらえる　🟣 SA＝カードが買える<br>
       📰 毎月いろいろな<b>ニュース</b>が！ 渋滞・台風・大雪・原油高・ご当地フェス・豊作・新車フェア…<br>
       👻 目的地から一番遠い人には、ガス欠おばけ「<b>ブスブス</b>」が取りつく。ほかの車を追いこすと押しつけられる！<br>
@@ -1251,7 +1251,7 @@ function roulette(segs,target,{title,human}){
 }
 // 人生イベント
 const LIFE=[
-  {k:'marry',icon:'💍',label:'結婚',color:'#ff9ccc'},{k:'promo',icon:'📈',label:'昇進',color:'#a8e6a1'},
+  {k:'marry',icon:'💍',label:'結婚',color:'#ff9ccc'},{k:'promo',icon:'📺',label:'TV取材',color:'#a8e6a1'},
   {k:'baby',icon:'👶',label:'家族がふえる',color:'#ffe08a'},{k:'broken',icon:'🔧',label:'車が故障',color:'#f4a6a6'},
   {k:'hitch',icon:'👍',label:'ヒッチハイカー',color:'#9fdcff'},{k:'lottery',icon:'🎰',label:'宝くじ',color:'#ffc48a'},
   {k:'house',icon:'🏠',label:'マイホーム',color:'#d3c0ea'},{k:'trip',icon:'✈️',label:'家族旅行',color:'#9ee6ef'},
@@ -1281,8 +1281,10 @@ async function lifeEvent(i,node){
       p.pax.push('hitch'); renderAll();
       await say(`👍 ヒッチハイカーを乗せた！<br>次の都市で降りるとき、お礼をくれるよ`,T);break;
     case 'promo':{
-      const v=round100(rand(15,40)*100*yf()); p.money+=v; renderAll(); fxCoins(18); fxFloat(node,'+'+fmt(v),'#27ae60');
-      await fxBanner('gold','📈','昇進！',`ボーナス +${fmt(v)}`);log(`📈 ${p.name} が昇進 +${fmt(v)}`);break;}
+      const props=propsOf(i), sh=props.length?SHOPS[pick(props)]:null;
+      const v=round100(Math.max(rand(10,25)*100*yf(), yearlyIncome(i)*.3)); p.money+=v; renderAll(); fxCoins(18); fxFloat(node,'+'+fmt(v),'#27ae60');
+      const what=sh?`${NODES[sh.city].name}の「${sh.name}」がテレビで紹介されて大行列！`:'ドライブ旅がテレビ番組で紹介されて話題に！';
+      await fxBanner('gold','📺','テレビ取材！',`${what} +${fmt(v)}`,2200);log(`📺 ${p.name}：${what} +${fmt(v)}`);break;}
     case 'lottery':{
       const big=Math.random()<.25, v=round100((big?rand(80,200):rand(2,12))*100*yf()); p.money+=v; renderAll();
       if(big){fxCoins(40);await fxStamp('大当たり！','#f2a516');}
