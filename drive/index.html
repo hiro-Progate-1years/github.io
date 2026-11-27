@@ -182,7 +182,8 @@ button.primary:active{transform:translateY(2px);box-shadow:0 1px 0 #c57f00}
       ⛽ <b>ガソリン</b>は1マス1L。都市かSAに止まると自動で給油。空になるとガス欠！<br>
       🏪 都市の<b>お店</b>を買うと毎年3月に収益が入る。全部買い占めると2倍！ <b>ガソリンスタンド</b>を持っていると、ライバルの給油代が自分に入る。<br>
       📦 都市で<b>配達の依頼</b>を受けて、名産品を届け先まで運ぶと報酬！<br>
-      🚙 大都市の<b>ディーラー</b>で車を買いかえ。トラックは荷物たくさん、SUVは雪に強い、スポーツカーはサイコロ2個！<br>
+      🚙 地図の<b>🚙マークの都市</b>（カーディーラー）で車を買いかえ！ ワゴン・トラックは荷物をたくさん積める、SUVは雪に強い、スポーツカーはサイコロ+1個！<br>
+      🏁 目的地には<b>ぴったりの目</b>で止まらないと到着にならないよ（通りすぎはダメ）<br>
       🔵 青マス＝お金がもらえる　🔴 赤マス＝お金がへる　🟡 黄マス＝カードがもらえる　🟣 SA＝カードが買える<br>
       📰 毎月いろいろな<b>ニュース</b>が！ 渋滞・台風・大雪・原油高・ご当地フェス・豊作・新車フェア…<br>
       👻 目的地から一番遠い人には、ガス欠おばけ「<b>ブスブス</b>」が取りつく。ほかの車を追いこすと押しつけられる！<br>
@@ -429,11 +430,11 @@ const SHOP_LIST = ['turbo','nitro','just','warp','can','oharai','toll','jaf','sl
 // 車：dice=基本のサイコロ数, tank=タンク(L), cargo=積める荷物の数
 const CARS = {
   kei:   {name:'軽自動車',dice:1,tank:18,cargo:1,price:0,desc:'最初の相棒。小さくて身軽'},
-  wagon: {name:'ワゴン',dice:1,tank:26,cargo:3,price:6000,desc:'荷物を3つ積める。家族旅行の定番'},
+  wagon: {name:'ワゴン',dice:1,tank:26,cargo:3,price:6000,desc:'荷物を3つ積める。配達でかせぐならコレ'},
   suv:   {name:'SUV',dice:1,tank:26,cargo:2,price:9000,desc:'雪道に強い：冬の赤マスが割増にならず、ブスブスのパンクも効かない'},
   camper:{name:'キャンピングカー',dice:1,tank:30,cargo:2,price:18000,desc:'車中泊で節約：赤マスの支払いが半分'},
   truck: {name:'トラック',dice:1,tank:36,cargo:5,price:16000,desc:'配達のプロ：荷物5つ・配達報酬1.5倍'},
-  sports:{name:'スポーツカー',dice:2,tank:20,cargo:1,price:35000,desc:'いつでもサイコロ2個！ ただしタンクが小さい'},
+  sports:{name:'スポーツカー',dice:2,tank:20,cargo:1,price:35000,desc:'サイコロ+1個（いつも2個ふれる）！ ただしタンクが小さい'},
 };
 const DEALERS = ['札幌','仙台','郡山','東京','名古屋','大阪','広島','福岡','鹿児島','那覇'];
 const FUEL_PRICE = 25;   // 1Lあたり(万円) ×年数補正
@@ -638,6 +639,10 @@ function buildMap(){
   // 都市名
   const lbl=el('g',{},svg);
   CITY_NODES.forEach(c=>{const n=NODES[c];const t=el('text',{x:n.x,y:n.y-19,'text-anchor':'middle',class:'lbl'},lbl);t.textContent=n.name});
+  DEALERS.forEach(nm=>{const n=NODES[CITY_BY_NAME[nm]];const g=el('g',{transform:`translate(${n.x+26},${n.y+2})`},lbl);
+    el('rect',{x:-15,y:-9,width:30,height:18,rx:9,fill:'#263445',stroke:'#fff','stroke-width':2},g);
+    const t=el('text',{x:0,y:4.5,'text-anchor':'middle','font-size':12},g);t.textContent='🚙';
+    const tt=el('title',{},g);tt.textContent=nm+'：カーディーラー（車を買える）'});
   layerDest=el('g',{},svg);
   layerHL=el('g',{},svg);
   layerTok=el('g',{},svg);
@@ -818,6 +823,7 @@ const ASZ={fuji:66,mountain:54,volcano:52,whale:46};
 function placeDecor(){
   if(DECOR_POS) return DECOR_POS;
   const obs=[];
+  DEALERS.forEach(nm=>{const n=NODES[CITY_BY_NAME[nm]];obs.push([n.x+26,n.y+2,18])});
   NODES.forEach(n=>obs.push([n.x,n.y,24]));
   CITY_NODES.forEach(c=>{const n=NODES[c];obs.push([n.x,n.y-19,20],[n.x-16,n.y-19,16],[n.x+16,n.y-19,16],[n.x,n.y+18,14])});
   EDGES.forEach(e=>{for(let k=1;k<e.pts.length;k++){const [x1,y1]=e.pts[k-1],[x2,y2]=e.pts[k];const L=Math.hypot(x2-x1,y2-y1);for(let t=0;t<L;t+=12)obs.push([x1+(x2-x1)*t/L,y1+(y2-y1)*t/L,e.kind==='ferry'?10:14])}});
@@ -1171,7 +1177,6 @@ function computeEndpoints(start,steps){
   const res=new Map(), seen=new Set(), stack=[[start,-1,steps,[]]];
   while(stack.length){
     const [n,prev,rem,path]=stack.pop();
-    if(path.length>0 && n===G.dest){if(!res.has(n))res.set(n,path);continue}
     if(rem===0){if(!res.has(n))res.set(n,path);continue}
     const key=n+','+prev+','+rem; if(seen.has(key))continue; seen.add(key);
     const ok=ADJ[n].filter(m=>!blocked(m,start));
@@ -1266,7 +1271,7 @@ function humanPick(i,ends){
       const b=document.createElement('button');b.className='endbtn';
       const t=NODES[n].type, dot={city:'🏙️',blue:'🔵',red:'🔴',yellow:'🟡',sa:'🟣'}[t];
       const pj=G.players[i].jobs.some(j=>ends.get(n).includes(j.to));
-      b.innerHTML=`${dot} ${TYPE_NAME[t]}${t==='city'?'：'+NODES[n].name:''}${pj?' 📦':''}<small>${n===G.dest?'🏁 目的地！':(t==='city'?'':nearestCityName(n)+'・')+'目的地まで'+D[n]}</small>`;
+      b.innerHTML=`${dot} ${TYPE_NAME[t]}${t==='city'?'：'+NODES[n].name:''}${pj?' 📦':''}${t==='city'&&DEALERS.includes(NODES[n].name)?' 🚙':''}<small>${n===G.dest?'🏁 目的地！':(t==='city'?'':nearestCityName(n)+'・')+'目的地まで'+D[n]}</small>`;
       b.onmouseenter=()=>focusNode(n);
       b.onclick=()=>done(n);
       bar.appendChild(b);
@@ -1431,7 +1436,7 @@ function cityShop(i,node){
   return modal({title:`🏙️ ${n.name}`,buttons:[{label:'出発する',value:true,cls:'primary'}],render:(body)=>{
     const draw=()=>{
       const mono=monopolyOwner(node), cap=CARS[p.car].cargo;
-      let h=`<div class="tabs"><button data-t="shop" class="${tab==='shop'?'on':''}">🏪 お店</button><button data-t="job" class="${tab==='job'?'on':''}">📦 配達の依頼</button>${dealer?`<button data-t="car" class="${tab==='car'?'on':''}">🚙 ディーラー</button>`:''}</div>
+      let h=`<div class="tabs"><button data-t="shop" class="${tab==='shop'?'on':''}">🏪 お店</button><button data-t="job" class="${tab==='job'?'on':''}">📦 配達の依頼</button>${dealer?`<button data-t="car" class="${tab==='car'?'on':''}">🚙 車を買う</button>`:''}</div>
         <p style="margin:0 0 6px">所持金 <b>${fmt(p.money)}</b>　⛽${p.fuel}/${CARS[p.car].tank}L　📦${p.jobs.length}/${cap}</p>`;
       if(tab==='shop'){
         h+=`${mono>=0?`<p style="margin:0;color:${G.players[mono].color}">★${esc(G.players[mono].name)}が独占中</p>`:''}${n.shops.map(s=>shopRow(s,i)).join('')}
@@ -1560,13 +1565,14 @@ function humanAction(i){
     const draw=()=>{
       renderHUD();
       const bar=setActions(`<button class="primary big" id="aRoll">🎲 サイコロをふる${baseDice(i)>1?'（'+baseDice(i)+'個）':''}</button>
-        <button id="aCard">🃏 カード（${p.cards.length}）</button><button id="aProp">📋 持ち物</button>`);
+        <button id="aCard">🃏 カード（${p.cards.length}）</button><button id="aProp">📋 持ち物</button><button id="aCar">🚙 車</button>`);
       bar.querySelector('#aRoll').onclick=()=>{setActions('');resolve({dice:baseDice(i)})};
       bar.querySelector('#aCard').onclick=async()=>{
         const r=await cardMenu(i);
         if(r){setActions('');resolve(r)}else draw();
       };
       bar.querySelector('#aProp').onclick=async()=>{await showProps(i);draw()};
+      bar.querySelector('#aCar').onclick=async()=>{await showCars(i);draw()};
     };
     draw();
   });
@@ -1881,6 +1887,17 @@ async function gameOver(){
     <table class="tbl">${rank.map((j,k)=>`<tr><td>${['🥇','🥈','🥉','4位'][k]} ${esc(G.players[j].name)}</td><td>🏪${propsOf(j).length}軒</td><td>${fmt(totalAssets(j))}</td></tr>`).join('')}</table>`,
     buttons:[{label:'タイトルへ',value:1,cls:'primary'}]});
   toTitle();
+}
+async function showCars(i){
+  const p=G.players[i], D=distFrom(p.pos);
+  const ds=DEALERS.map(n=>CITY_BY_NAME[n]).sort((a,b)=>D[a]-D[b]);
+  const trade=Math.round(CARS[p.car].price/2);
+  await modal({title:'🚙 車のカタログ',html:`
+    <p style="margin:0 0 6px;font-size:14px">地図の <b>🚙マーク</b> がついた都市（カーディーラー）に止まると、車を買いかえられるよ。今の車は ${fmt(trade)} で下取り。</p>
+    <p style="margin:0 0 10px;font-size:13px;color:#555">近いディーラー：${ds.slice(0,3).map(c=>`<b>${NODES[c].name}</b>（あと${D[c]}マス）`).join('、')}</p>
+    ${Object.keys(CARS).map(k=>{const c=CARS[k];return `<div class="job"><svg viewBox="-22 -24 44 34" style="width:54px;height:42px;flex:none;overflow:visible">${carSVG(p.color,k)}</svg>
+      <div class="n"><b>${c.name}${p.car===k?'（乗ってる）':''}</b><small>サイコロ${c.dice}個・タンク${c.tank}L・荷物${c.cargo}個${c.price?'・'+fmt(carPrice(k)):''}<br>${c.desc}</small></div></div>`}).join('')}
+    ${G.fx.sale===mi()?'<p style="color:#e8453c;font-weight:700">🎉 今月は新車フェアで3割引き！</p>':''}`});
 }
 async function showProps(i){
   const p=G.players[i], c=CARS[p.car];
