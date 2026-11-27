@@ -101,6 +101,28 @@ button.primary:active{transform:translateY(2px);box-shadow:0 1px 0 #c57f00}
 @keyframes bob{50%{transform:translateY(-2px)}}
 
 /* モーダル */
+#arrive{position:fixed;inset:0;z-index:20;overflow:hidden;background:radial-gradient(circle at 50% 42%,#fff3a8 0%,#ffc44d 40%,#f2752f 100%);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:16px}
+.ar-rays{position:absolute;left:50%;top:42%;width:260vmax;height:260vmax;margin:-130vmax 0 0 -130vmax;background:repeating-conic-gradient(rgba(255,255,255,.3) 0 9deg,transparent 9deg 18deg);animation:spinring 16s linear infinite}
+#ar-confetti{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.ar-box{position:relative;text-align:center;color:#fff;text-shadow:0 3px 0 rgba(140,55,0,.5)}
+.ar-city,.ar-who,.ar-prize,.ar-sub,.ar-tap{-webkit-text-stroke:5px #b3470f;paint-order:stroke fill}
+.ar-sub,.ar-tap{-webkit-text-stroke:4px #b3470f}
+.ar-goal{font-size:clamp(56px,16vw,120px);font-weight:900;letter-spacing:.06em;line-height:1;color:#fff;-webkit-text-stroke:3px #c2410c;paint-order:stroke fill;animation:ar-drop .8s cubic-bezier(.2,1.5,.4,1) both}
+.ar-city{font-size:clamp(28px,8vw,52px);font-weight:900;margin-top:6px;animation:ar-pop .5s .45s both}
+.ar-stage{position:relative;width:min(84vw,440px);height:min(42vw,200px);margin:4px auto 0}
+.ar-art{position:absolute;left:34%;bottom:0;width:min(38vw,180px);height:min(38vw,180px);transform:translateX(-50%);overflow:visible;animation:ar-rise .7s .7s cubic-bezier(.3,1.6,.5,1) both}
+.ar-car{position:absolute;left:62%;bottom:2%;width:min(26vw,130px);height:min(20vw,100px);overflow:visible;animation:ar-drive 1.1s 1s cubic-bezier(.25,1.25,.5,1) both}
+.ar-who{font-size:clamp(18px,5vw,26px);font-weight:800;margin-top:6px;animation:ar-pop .4s 1.6s both}
+.ar-prize{font-size:clamp(26px,7vw,44px);font-weight:900;animation:ar-pop .4s 1.9s both}
+.ar-prize b{color:#fff59d}
+.ar-sub{font-size:15px;font-weight:700;margin-top:4px;animation:ar-pop .4s 2.2s both}
+.ar-tap{margin-top:16px;font-size:14px;font-weight:700;opacity:0;animation:ar-blink 1.1s 3s infinite}
+@keyframes ar-drop{0%{transform:translateY(-70vh) scale(.5) rotate(-8deg)}100%{transform:none}}
+@keyframes ar-pop{0%{transform:scale(.3);opacity:0}70%{transform:scale(1.15);opacity:1}100%{transform:none}}
+@keyframes ar-rise{0%{transform:translateX(-50%) translateY(60px) scale(.2);opacity:0}100%{transform:translateX(-50%)}}
+@keyframes ar-drive{0%{transform:translateX(-90vw)}80%{transform:translateX(6%)}100%{transform:none}}
+@keyframes ar-blink{50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.ar-rays,.ar-goal,.ar-city,.ar-art,.ar-car,.ar-who,.ar-prize,.ar-sub{animation:none}.ar-tap{opacity:1;animation:none}}
 #modal{position:fixed;inset:0;background:rgba(10,15,25,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
 #modal .box{background:#fff;border-radius:18px;max-width:560px;width:100%;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 50px rgba(0,0,0,.35);animation:pop .18s ease-out}
 @keyframes pop{from{transform:scale(.9);opacity:0}}
@@ -195,6 +217,19 @@ button.primary:active{transform:translateY(2px);box-shadow:0 1px 0 #c57f00}
   <div id="actions"></div>
 </div>
 
+<div id="arrive" hidden>
+  <div class="ar-rays"></div>
+  <canvas id="ar-confetti"></canvas>
+  <div class="ar-box">
+    <div class="ar-goal">GOAL!</div>
+    <div class="ar-city"></div>
+    <div class="ar-stage"><svg class="ar-art" viewBox="-24 -26 48 48"></svg><svg class="ar-car" viewBox="-22 -24 44 34"></svg></div>
+    <div class="ar-who"></div>
+    <div class="ar-prize">賞金 <b>0万円</b></div>
+    <div class="ar-sub"></div>
+    <div class="ar-tap">タップで つぎへ ▶</div>
+  </div>
+</div>
 <div id="modal" hidden><div class="box"><h2></h2><div class="body"></div><div class="btns"></div></div></div>
 
 <script>
@@ -589,6 +624,16 @@ function buildMap(){
       if(n.type==='yellow'){const t=el('text',{x:n.x,y:n.y+3.5,'text-anchor':'middle',class:'sqtext',style:'fill:#7a5a00'},sq);t.textContent='?'}
     }
   });
+  // 名所・名物のイラスト
+  const defs2=el('defs',{},svg);
+  defs2.innerHTML=Object.entries(ART).map(([k,v])=>`<symbol id="art-${k}" viewBox="-24 -26 48 48" overflow="visible">${v}</symbol>`).join('');
+  const dg=el('g',{},svg);
+  placeDecor().forEach(d=>{
+    const zz=(ASZ[d.art]||40)/40; if(d.art!=='whale'&&d.art!=='boat') el('ellipse',{cx:d.x,cy:d.y+17*zz,rx:14*zz,ry:3.5*zz,fill:'rgba(0,0,0,.15)'},dg);
+    const z=ASZ[d.art]||40;
+    const u=el('use',{href:'#art-'+d.art,x:d.x-z/2,y:d.y-z*.52,width:z,height:z},dg);
+    if(d.col) u.setAttribute('color',d.col);
+  });
   layerOwn=el('g',{},svg);
   // 都市名
   const lbl=el('g',{},svg);
@@ -660,6 +705,140 @@ function renderDest(){
   for(const e in G.closed){const ns=EDGES[e].nodes;ns.forEach((id,k)=>{if(k%2&&ns.length>2)return;const t=el('text',{x:NODES[id].x,y:NODES[id].y+7,'font-size':20,'text-anchor':'middle'},layerDest);t.textContent='🚧'})}
   const p=G.players[G.turn];
   if(p&&p.human) p.jobs.forEach(j=>{const c=NODES[j.to];const b=el('text',{x:c.x-34,y:c.y-16,'font-size':20},layerDest);b.textContent='📦'});
+}
+
+/* =========================================================
+   地図のイラスト（名所・名物）。すべてオリジナルのSVG
+   ========================================================= */
+const O='stroke="#4a3b33" stroke-width="1.4" stroke-linejoin="round"';
+const ART={
+ castle:`<rect x="-14" y="9" width="28" height="9" rx="1" fill="#a39a90" ${O}/><path d="M-14 13h28M-7 9v9M2 9v9" stroke="#7d746b" stroke-width=".8"/>
+  <rect x="-11" y="1" width="22" height="8" fill="#fff" ${O}/><path d="M-16 3 Q0 -5 16 3 Z" fill="currentColor" ${O}/>
+  <rect x="-8" y="-7" width="16" height="7" fill="#fff" ${O}/><path d="M-12 -5 Q0 -12 12 -5 Z" fill="currentColor" ${O}/>
+  <rect x="-5" y="-14" width="10" height="5" fill="#fff" ${O}/><path d="M-8 -12 Q0 -19 8 -12 Z" fill="currentColor" ${O}/>
+  <rect x="-6" y="3" width="2.5" height="3" fill="#4a3b33"/><rect x="-1" y="3" width="2.5" height="3" fill="#4a3b33"/><rect x="4" y="3" width="2.5" height="3" fill="#4a3b33"/>
+  <rect x="-3" y="-5" width="2" height="3" fill="#4a3b33"/><rect x="1.5" y="-5" width="2" height="3" fill="#4a3b33"/>
+  <path d="M-7 -14 q-1 -4 1 -5 M7 -14 q1 -4 -1 -5" stroke="#e0a800" stroke-width="2" fill="none" stroke-linecap="round"/>`,
+ pagoda:`<rect x="-1" y="-22" width="2" height="8" fill="#c9a227"/><circle cx="0" cy="-22" r="1.4" fill="#c9a227"/>
+  ${[0,1,2,3,4].map(k=>{const w=15-k*2.2,y=14-k*6.4;return `<rect x="${-w*.55}" y="${y-4}" width="${w*1.1}" height="4.5" fill="#d9773f" ${O}/><path d="M${-w} ${y-3} Q0 ${y-8} ${w} ${y-3} L${w-2} ${y-5} Q0 ${y-9.5} ${-w+2} ${y-5} Z" fill="currentColor" ${O}/>`}).join('')}
+  <rect x="-9" y="14" width="18" height="4" fill="#a39a90" ${O}/>`,
+ torii:`<rect x="-11" y="-8" width="3.4" height="26" fill="#e2452f" ${O}/><rect x="7.6" y="-8" width="3.4" height="26" fill="#e2452f" ${O}/>
+  <rect x="-13" y="-6" width="26" height="3" fill="#e2452f" ${O}/><path d="M-17 -12 Q0 -9 17 -12 L16 -15 Q0 -12 -16 -15 Z" fill="#2d2d2d" ${O}/><rect x="-1.5" y="-12" width="3" height="6" fill="#e2452f" ${O}/>`,
+ torii_sea:`<path d="M-19 14 q4 -3 8 0 t8 0 t8 0 t8 0 t8 0 L19 19 L-19 19 Z" fill="#7cc8ec" ${O}/>
+  <g transform="translate(0,-3)"><rect x="-11" y="-8" width="3.4" height="24" fill="#e2452f" ${O}/><rect x="7.6" y="-8" width="3.4" height="24" fill="#e2452f" ${O}/>
+  <rect x="-13" y="-6" width="26" height="3" fill="#e2452f" ${O}/><path d="M-17 -12 Q0 -9 17 -12 L16 -15 Q0 -12 -16 -15 Z" fill="#2d2d2d" ${O}/></g>
+  <path d="M-15 16 q3 -2 6 0 t6 0 t6 0 t6 0 t6 0" fill="none" stroke="#fff" stroke-width="1.2"/>`,
+ shrine:`<rect x="-13" y="2" width="26" height="14" fill="#f4e3c3" ${O}/><path d="M-19 4 L0 -12 L19 4 Z" fill="currentColor" ${O}/>
+  <path d="M-5 -10 L5 -10 M-7 -12 L-3 -16 M7 -12 L3 -16" stroke="#4a3b33" stroke-width="1.6"/><path d="M-11 6 Q0 11 11 6" fill="none" stroke="#c9a227" stroke-width="2.4"/>
+  <rect x="-4" y="8" width="8" height="8" fill="#a0522d" ${O}/><rect x="-16" y="16" width="32" height="3" fill="#a39a90" ${O}/>`,
+ tower:`<path d="M0 -22 L-12 18 L12 18 Z" fill="#e94b3c" ${O}/><path d="M-3.3 -8 L3.3 -8 M-6.2 2 L6.2 2 M-9.3 12 L9.3 12" stroke="#fff" stroke-width="2.6"/>
+  <path d="M-9 18 Q0 6 9 18" fill="#fff" ${O}/><rect x="-5" y="-6" width="10" height="4" fill="#fff" ${O}/><path d="M0 -22 L0 -27" stroke="#4a3b33" stroke-width="1.4"/>`,
+ porttower:`<path d="M-7 -20 Q0 -18 7 -20 Q2 -2 7 18 L-7 18 Q-2 -2 -7 -20 Z" fill="#e94b3c" ${O}/><path d="M-5 -12 L5 -12 M-3 -2 L3 -2 M-5 8 L5 8" stroke="#fff" stroke-width="1.4"/><rect x="-6" y="-24" width="12" height="4" fill="#fff" ${O}/>`,
+ clocktower:`<rect x="-13" y="2" width="26" height="15" fill="#fff" ${O}/><path d="M-16 4 L0 -6 L16 4 Z" fill="#d94b3c" ${O}/>
+  <rect x="-5" y="-14" width="10" height="10" fill="#fff" ${O}/><path d="M-7 -13 L0 -21 L7 -13 Z" fill="#d94b3c" ${O}/><circle cx="0" cy="-9" r="3" fill="#fff8dc" ${O}/><path d="M0 -9 L0 -11 M0 -9 L1.6 -9" stroke="#4a3b33" stroke-width=".9"/>
+  <rect x="-9" y="7" width="4" height="5" fill="#9fd0ea" ${O}/><rect x="5" y="7" width="4" height="5" fill="#9fd0ea" ${O}/><rect x="-2" y="9" width="4" height="8" fill="#8a5a3c" ${O}/>`,
+ fuji:`<path d="M-24 18 L-6 -14 Q0 -18 6 -14 L24 18 Z" fill="#5b8fd1" ${O}/><path d="M-11 -5 L-6 -14 Q0 -18 6 -14 L11 -5 L7 -7 L4 -3 L0 -7 L-4 -3 L-7 -7 Z" fill="#fff" ${O}/>`,
+ mountain:`<path d="M-22 18 L-8 -6 L0 6 L8 -10 L22 18 Z" fill="#7fb069" ${O}/><path d="M-11 -1 L-8 -6 L-5 -1 Z M5 -5 L8 -10 L11 -5 Z" fill="#fff"/>`,
+ volcano:`<path d="M-22 18 L-7 -6 L7 -6 L22 18 Z" fill="#9b6b4b" ${O}/><path d="M-7 -6 L7 -6 L5 -3 L-5 -3 Z" fill="#e56b3a"/>
+  <circle cx="-2" cy="-12" r="4" fill="#ddd" ${O}/><circle cx="4" cy="-17" r="5" fill="#eee" ${O}/><circle cx="-3" cy="-22" r="4" fill="#f4f4f4" ${O}/>`,
+ daibutsu:`<ellipse cx="0" cy="12" rx="15" ry="7" fill="#6f9a86" ${O}/><path d="M-11 12 Q-12 -2 0 -3 Q12 -2 11 12 Z" fill="#7aa892" ${O}/>
+  <circle cx="0" cy="-9" r="7" fill="#7aa892" ${O}/><circle cx="0" cy="-16" r="3" fill="#6f9a86" ${O}/><path d="M-3 -9 q1.5 1 3 0 M1 -9 q1.5 1 3 0" stroke="#4a3b33" stroke-width="1" fill="none"/>
+  <ellipse cx="0" cy="8" rx="5" ry="3" fill="#6f9a86" ${O}/>`,
+ onsen:`<ellipse cx="0" cy="12" rx="16" ry="6" fill="#9fd8f0" ${O}/><ellipse cx="0" cy="10" rx="11" ry="3" fill="#c9edfb"/>
+  <path d="M-8 2 q-4 -5 0 -10 q4 -5 0 -10 M0 2 q-4 -5 0 -10 q4 -5 0 -10 M8 2 q-4 -5 0 -10 q4 -5 0 -10" stroke="#e05a4f" stroke-width="2.4" fill="none" stroke-linecap="round"/>`,
+ shurimon:`<rect x="-15" y="0" width="4" height="18" fill="#d63c2f" ${O}/><rect x="11" y="0" width="4" height="18" fill="#d63c2f" ${O}/><rect x="-4" y="0" width="3" height="18" fill="#d63c2f" ${O}/><rect x="1" y="0" width="3" height="18" fill="#d63c2f" ${O}/>
+  <path d="M-19 2 L0 -6 L19 2 Z" fill="#c0392b" ${O}/><rect x="-10" y="-9" width="20" height="4" fill="#d63c2f" ${O}/><path d="M-13 -7 L0 -15 L13 -7 Z" fill="#c0392b" ${O}/><rect x="-4" y="-5" width="8" height="3" fill="#f2c94c" ${O}/>`,
+ lighthouse:`<path d="M-6 18 L-4 -10 L4 -10 L6 18 Z" fill="#fff" ${O}/><path d="M-5.6 10 L5.6 10 L5.3 4 L-5.3 4 Z M-4.8 -4 L4.8 -4 L4.6 -9 L-4.6 -9 Z" fill="#e2452f"/>
+  <rect x="-5" y="-16" width="10" height="6" fill="#fff59d" ${O}/><path d="M-6 -16 L0 -21 L6 -16 Z" fill="#e2452f" ${O}/><path d="M6 -14 L18 -18 M6 -12 L18 -9" stroke="#f2c94c" stroke-width="2"/>`,
+ star:`<path d="M0 -18 L5 -6 L18 -6 L8 2 L12 15 L0 7 L-12 15 L-8 2 L-18 -6 L-5 -6 Z" fill="#7fb069" ${O}/><path d="M0 -9 L2.5 -3 L9 -3 L4 1 L6 7 L0 3 L-6 7 L-4 1 L-9 -3 L-2.5 -3 Z" fill="#a8d58b"/>`,
+ tanabata:`<path d="M-2 18 Q-1 0 2 -20" stroke="#5a9a4a" stroke-width="2.6" fill="none"/><path d="M2 -20 l6 -2 M1 -10 l-7 -2 M0 0 l7 -1" stroke="#5a9a4a" stroke-width="1.6"/>
+  <path d="M-8 -12 l4 0 l-1 16 l-2 0 Z" fill="#ff8fb1" ${O}/><path d="M5 -6 l5 0 l-1 18 l-3 0 Z" fill="#8fd3ff" ${O}/><rect x="-10" y="2" width="4" height="8" fill="#fff59d" ${O}/><rect x="7" y="-17" width="4" height="7" fill="#b9f6a7" ${O}/>`,
+ tree:`<rect x="-3" y="4" width="6" height="14" fill="#8a5a3c" ${O}/><circle cx="0" cy="-6" r="12" fill="#4f9a5a" ${O}/><circle cx="-7" cy="0" r="7" fill="#5fae69" ${O}/><circle cx="8" cy="-1" r="7" fill="#5fae69" ${O}/>`,
+ apple:`<circle cx="-4" cy="4" r="10" fill="#e5383b" ${O}/><circle cx="4" cy="4" r="10" fill="#e5383b" ${O}/><path d="M-12 4 Q-12 -6 0 -4 Q12 -6 12 4" fill="#e5383b"/>
+  <path d="M0 -5 Q1 -11 3 -13" stroke="#6b4226" stroke-width="2" fill="none"/><path d="M2 -10 Q8 -15 12 -10 Q7 -7 2 -10 Z" fill="#6abf4b" ${O}/><ellipse cx="-6" cy="0" rx="2.5" ry="4" fill="#fff" opacity=".5"/>`,
+ ramen:`<path d="M-17 2 L17 2 Q15 17 0 17 Q-15 17 -17 2 Z" fill="#e2452f" ${O}/><path d="M-12 7 L12 7" stroke="#fff" stroke-width="1.4" stroke-dasharray="3 2"/>
+  <ellipse cx="0" cy="2" rx="17" ry="4" fill="#f6d28b" ${O}/><path d="M-10 2 q3 -2 6 0 t6 0 t6 0" stroke="#e8b04a" stroke-width="1.2" fill="none"/><circle cx="7" cy="1" r="3.5" fill="#fff" ${O}/><path d="M5.5 1 q1.5 -1.5 3 0" stroke="#ff7a9a" fill="none"/>
+  <path d="M-4 1 L10 -16 M0 1 L13 -14" stroke="#c49a6c" stroke-width="2" stroke-linecap="round"/>`,
+ udon:`<path d="M-17 2 L17 2 Q15 17 0 17 Q-15 17 -17 2 Z" fill="#2f2f2f" ${O}/><ellipse cx="0" cy="2" rx="17" ry="4" fill="#fffaf0" ${O}/><path d="M-11 2 q3 -2 6 0 t6 0 t6 0" stroke="#e0d6c2" stroke-width="1.4" fill="none"/><circle cx="-6" cy="1" r="2" fill="#7bc96f"/><circle cx="5" cy="2" r="2" fill="#7bc96f"/>`,
+ crab:`<ellipse cx="0" cy="6" rx="13" ry="8" fill="#e8553e" ${O}/><path d="M-13 4 L-19 -3 M13 4 L19 -3 M-11 10 L-18 14 M11 10 L18 14" stroke="#e8553e" stroke-width="2.6" stroke-linecap="round"/>
+  <circle cx="-19" cy="-6" r="4" fill="#e8553e" ${O}/><circle cx="19" cy="-6" r="4" fill="#e8553e" ${O}/><circle cx="-4" cy="-2" r="2.4" fill="#fff" ${O}/><circle cx="4" cy="-2" r="2.4" fill="#fff" ${O}/><circle cx="-4" cy="-2" r="1" fill="#222"/><circle cx="4" cy="-2" r="1" fill="#222"/>`,
+ cherry:`<path d="M-5 6 Q-2 -10 6 -16 M6 6 Q5 -8 6 -16" stroke="#5a8a3a" stroke-width="1.8" fill="none"/><path d="M6 -16 Q14 -18 15 -12 Q9 -10 6 -16 Z" fill="#6abf4b" ${O}/>
+  <circle cx="-6" cy="10" r="7" fill="#d7263d" ${O}/><circle cx="7" cy="10" r="7" fill="#d7263d" ${O}/><circle cx="-8" cy="8" r="1.8" fill="#fff" opacity=".7"/><circle cx="5" cy="8" r="1.8" fill="#fff" opacity=".7"/>`,
+ peach:`<path d="M0 -10 Q-15 -8 -13 6 Q-10 18 0 18 Q10 18 13 6 Q15 -8 0 -10 Z" fill="#ffb3a7" ${O}/><path d="M0 -10 Q-3 4 0 18" stroke="#f08a7e" stroke-width="1.4" fill="none"/>
+  <path d="M0 -10 Q-9 -18 -14 -12 Q-7 -8 0 -10 Z M0 -10 Q8 -18 13 -13 Q7 -8 0 -10 Z" fill="#6abf4b" ${O}/>`,
+ mikan:`<circle cx="0" cy="4" r="13" fill="#f7931e" ${O}/><circle cx="0" cy="-8" r="2" fill="#5a8a3a"/><path d="M0 -8 Q8 -16 14 -10 Q7 -6 0 -8 Z" fill="#6abf4b" ${O}/><circle cx="-5" cy="0" r="2" fill="#fff" opacity=".5"/>`,
+ fish:`<path d="M-17 2 Q-6 -10 8 -2 L17 -9 L15 2 L17 13 L8 6 Q-6 14 -17 2 Z" fill="#4a7fb5" ${O}/><path d="M-12 4 Q-2 8 8 4" stroke="#cfe2f5" stroke-width="2" fill="none"/><circle cx="-10" cy="0" r="1.8" fill="#fff" ${O}/>`,
+ cow:`<ellipse cx="0" cy="4" rx="15" ry="9" fill="#fff" ${O}/><path d="M-6 -2 q4 -2 6 3 q-3 4 -7 1 Z M5 5 q4 -2 6 3 q-4 3 -6 -3 Z" fill="#333"/>
+  <rect x="-11" y="10" width="3.5" height="8" fill="#fff" ${O}/><rect x="7" y="10" width="3.5" height="8" fill="#fff" ${O}/><ellipse cx="15" cy="-2" rx="6" ry="5" fill="#fff" ${O}/><ellipse cx="18" cy="0" rx="3.4" ry="2.6" fill="#ffc1cc" ${O}/><circle cx="14" cy="-4" r="1" fill="#222"/>`,
+ deer:`<ellipse cx="-2" cy="6" rx="12" ry="7" fill="#c68a4f" ${O}/><circle cx="-6" cy="4" r="1.4" fill="#fff"/><circle cx="1" cy="7" r="1.4" fill="#fff"/><circle cx="-3" cy="9" r="1.2" fill="#fff"/>
+  <rect x="-10" y="11" width="3" height="8" fill="#c68a4f" ${O}/><rect x="4" y="11" width="3" height="8" fill="#c68a4f" ${O}/><path d="M8 2 L11 -8" stroke="#c68a4f" stroke-width="5" stroke-linecap="round"/>
+  <ellipse cx="13" cy="-10" rx="5" ry="4" fill="#c68a4f" ${O}/><path d="M11 -13 L8 -20 L5 -19 M8 -20 L9 -23 M15 -13 L18 -20 L21 -19 M18 -20 L17 -23" stroke="#8a5a3c" stroke-width="1.4" fill="none"/><circle cx="14" cy="-10" r="1" fill="#222"/>`,
+ grapes:`${[[0,-8],[-6,-6],[6,-6],[-3,0],[3,0],[-6,5],[6,5],[0,6],[-3,11],[3,11],[0,16]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="4.2" fill="#7b4fa8" ${O}/>`).join('')}
+  <path d="M0 -12 L1 -18" stroke="#6b4226" stroke-width="2"/><path d="M1 -16 Q9 -21 13 -14 Q6 -11 1 -16 Z" fill="#6abf4b" ${O}/>`,
+ tea:`<path d="M-12 -2 L12 -2 L10 15 Q0 19 -10 15 Z" fill="#a8d58b" ${O}/><ellipse cx="0" cy="-2" rx="12" ry="3" fill="#7cb85a" ${O}/><path d="M-4 -8 q-3 -4 0 -8 M4 -8 q-3 -4 0 -8" stroke="#bbb" stroke-width="1.6" fill="none"/>`,
+ melon:`<circle cx="0" cy="4" r="14" fill="#9ccc65" ${O}/><path d="M-12 -2 Q0 4 12 -2 M-13 6 Q0 12 13 6 M-6 -9 Q-2 4 -6 17 M6 -9 Q2 4 6 17" stroke="#e8f5d0" stroke-width="1.2" fill="none"/><path d="M-3 -10 L3 -10 L0 -14 Z" fill="#6b8e23" ${O}/>`,
+ octopus:`<circle cx="0" cy="-4" r="11" fill="#ef6a5a" ${O}/><path d="M-10 2 q-4 8 -8 10 M-5 5 q-2 8 -5 12 M0 6 q0 8 0 12 M5 5 q2 8 5 12 M10 2 q4 8 8 10" stroke="#ef6a5a" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+  <circle cx="-4" cy="-4" r="2" fill="#fff" ${O}/><circle cx="4" cy="-4" r="2" fill="#fff" ${O}/><circle cx="0" cy="2" r="2.2" fill="#d94b3c" ${O}/><path d="M-5 -15 q3 -3 6 -1" stroke="#fff" stroke-width="2" fill="none"/>`,
+ gyoza:`<path d="M-16 8 Q-16 -6 0 -8 Q16 -6 16 8 Z" fill="#f5deb3" ${O}/><path d="M-10 -4 l2 4 M-4 -7 l1 5 M3 -7 l-1 5 M9 -5 l-2 4" stroke="#c9a36b" stroke-width="1.4"/><path d="M-17 8 L17 8 Q16 13 0 13 Q-16 13 -17 8 Z" fill="#d9a05b" ${O}/>`,
+ sake:`<path d="M-5 -16 L5 -16 L5 -10 Q11 -6 11 2 L11 18 L-11 18 L-11 2 Q-11 -6 -5 -10 Z" fill="#cfe8d0" ${O}/><rect x="-7" y="0" width="14" height="12" fill="#fff" ${O}/><path d="M-3 3 L3 3 M0 2 L0 10 M-3 7 L3 7" stroke="#c0392b" stroke-width="1.4"/><rect x="-5" y="-19" width="10" height="3" fill="#c0392b" ${O}/>`,
+ oyster:`<path d="M-17 6 Q-12 -10 2 -9 Q17 -7 16 6 Q4 16 -17 6 Z" fill="#cfc6b8" ${O}/><path d="M-12 4 Q0 -6 13 3" stroke="#9e9282" stroke-width="1.2" fill="none"/><ellipse cx="0" cy="5" rx="9" ry="4" fill="#f3efe7" ${O}/>`,
+ crane:`<ellipse cx="-2" cy="6" rx="12" ry="7" fill="#fff" ${O}/><path d="M-14 6 L-19 10 L-12 12 Z" fill="#222" ${O}/><path d="M6 2 Q10 -8 6 -16" stroke="#222" stroke-width="3" fill="none"/>
+  <circle cx="6" cy="-17" r="3.5" fill="#fff" ${O}/><circle cx="6" cy="-20" r="1.6" fill="#e2452f"/><path d="M9 -17 L16 -16" stroke="#c9a227" stroke-width="2"/><path d="M-4 13 L-5 20 M2 13 L3 20" stroke="#4a3b33" stroke-width="1.4"/>`,
+ bear:`<circle cx="0" cy="2" r="13" fill="#8b5a3c" ${O}/><circle cx="-10" cy="-9" r="5" fill="#8b5a3c" ${O}/><circle cx="10" cy="-9" r="5" fill="#8b5a3c" ${O}/><ellipse cx="0" cy="7" rx="6" ry="4.5" fill="#d9b38c" ${O}/>
+  <circle cx="0" cy="5" r="1.8" fill="#222"/><circle cx="-5" cy="-1" r="1.5" fill="#222"/><circle cx="5" cy="-1" r="1.5" fill="#222"/><circle cx="-9" cy="4" r="2" fill="#ff9aa2" opacity=".6"/><circle cx="9" cy="4" r="2" fill="#ff9aa2" opacity=".6"/>`,
+ panda:`<circle cx="0" cy="2" r="13" fill="#fff" ${O}/><circle cx="-10" cy="-9" r="5" fill="#222"/><circle cx="10" cy="-9" r="5" fill="#222"/><ellipse cx="-5" cy="0" rx="3.4" ry="4.4" fill="#222" transform="rotate(-25 -5 0)"/><ellipse cx="5" cy="0" rx="3.4" ry="4.4" fill="#222" transform="rotate(25 5 0)"/>
+  <circle cx="-5" cy="0" r="1.1" fill="#fff"/><circle cx="5" cy="0" r="1.1" fill="#fff"/><ellipse cx="0" cy="6" rx="2" ry="1.4" fill="#222"/>`,
+ seal:`<path d="M-17 12 Q-16 -2 -2 -4 Q12 -6 14 6 Q16 14 0 15 Z" fill="#e8e8ee" ${O}/><path d="M-17 12 L-21 6 L-19 15 Z" fill="#e8e8ee" ${O}/><circle cx="6" cy="1" r="1.6" fill="#222"/><circle cx="12" cy="1" r="1.6" fill="#222"/><ellipse cx="9" cy="5" rx="2" ry="1.4" fill="#222"/>`,
+ camel:`<path d="M-14 6 Q-12 -6 -6 -2 Q-2 -10 4 -2 Q8 -4 10 2 L12 -10 L17 -11 L15 4 Q10 10 -14 8 Z" fill="#d9a86c" ${O}/><path d="M-11 8 L-11 18 M-5 8 L-5 18 M4 8 L4 18 M9 8 L9 18" stroke="#b9874c" stroke-width="2.6"/><circle cx="15" cy="-9" r="1" fill="#222"/>`,
+ pineapple:`<ellipse cx="0" cy="7" rx="10" ry="12" fill="#f9c51b" ${O}/><path d="M-8 0 L8 14 M-8 14 L8 0 M-9 7 L0 -4 L9 7 L0 18 Z" stroke="#c9961a" stroke-width="1" fill="none"/>
+  <path d="M0 -5 L-8 -18 L-2 -10 L0 -22 L2 -10 L8 -18 Z" fill="#4caf50" ${O}/>`,
+ mango:`<path d="M-10 -8 Q8 -14 13 4 Q14 17 0 17 Q-14 15 -13 2 Q-13 -5 -10 -8 Z" fill="#f2683c" ${O}/><path d="M-6 -6 Q4 -10 10 0" stroke="#ffb36b" stroke-width="3" fill="none"/><path d="M-9 -9 Q-12 -16 -6 -18 Q-4 -12 -9 -9 Z" fill="#6abf4b" ${O}/>`,
+ boat:`<path d="M-18 6 L18 6 L13 16 L-13 16 Z" fill="#fff" ${O}/><rect x="-18" y="11" width="36" height="2" fill="#e2452f"/><rect x="-8" y="-4" width="14" height="10" fill="#fff" ${O}/><rect x="-5" y="-2" width="3" height="3" fill="#9fd0ea"/><rect x="0" y="-2" width="3" height="3" fill="#9fd0ea"/><rect x="2" y="-12" width="4" height="8" fill="#e2452f" ${O}/>
+  <circle cx="7" cy="-16" r="2.5" fill="#eee"/><circle cx="11" cy="-20" r="3" fill="#f4f4f4"/>`,
+ whale:`<path d="M-20 4 Q-18 -10 2 -10 Q18 -10 18 4 Q16 12 -2 12 Q-16 12 -20 4 Z" fill="#5b8fd1" ${O}/><path d="M-16 7 Q0 14 16 6 Q12 12 -2 12 Q-14 12 -16 7 Z" fill="#cfe2f5"/>
+  <path d="M18 2 L24 -4 L23 6 Z" fill="#5b8fd1" ${O}/><circle cx="-10" cy="-1" r="1.6" fill="#222"/><path d="M-4 -10 q-2 -6 -6 -8 M-4 -10 q2 -6 6 -8" stroke="#9fd0ea" stroke-width="2" fill="none"/>`,
+ flag:`<path d="M-8 18 L-8 -18" stroke="#4a3b33" stroke-width="2"/><path d="M-8 -18 L14 -12 L-8 -5 Z" fill="#e2452f" ${O}/>`,
+};
+// [都市 or null, 絵, 色(屋根など), 経度, 緯度]
+const DECOR=[
+ ['札幌','clocktower'],['札幌','ramen'],['旭川','bear'],['富良野','melon'],['帯広','cow'],['釧路','crane'],['紋別','seal'],['根室','crab'],['函館','star'],
+ ['青森','apple'],['仙台','tanabata'],['山形','cherry'],['福島','peach'],['会津若松','castle','#b5443a'],['日光','shrine','#c9a227'],['宇都宮','gyoza'],
+ ['東京','tower'],['横浜','daibutsu'],['横浜','boat'],['甲府','grapes'],[null,'fuji',null,138.73,35.36],['静岡','tea'],['前橋','onsen'],['小田原','castle','#5d6d7e'],
+ ['新潟','sake'],['松本','castle','#2d2d2d'],['長野','shrine','#6d4c41'],[null,'mountain',null,137.62,36.0],['名古屋','castle','#3d8b6e'],['伊勢','torii'],
+ ['京都','pagoda','#5d4037'],['京都','torii'],['奈良','deer'],['大阪','castle','#3f8a6a'],['大阪','octopus'],['神戸','porttower'],['姫路','castle','#8d9aa5'],
+ ['和歌山','mikan'],['白浜','panda'],['串本','lighthouse'],['鳥取','camel'],['松江','shrine','#6d4c41'],['岡山','peach'],['広島','torii_sea'],['広島','oyster'],
+ ['高松','udon'],['松山','onsen'],['高知','fish'],['福岡','ramen'],['熊本','castle','#2d2d2d'],['阿蘇','volcano'],['大分','onsen'],['宮崎','mango'],
+ ['鹿児島','volcano'],['屋久島','tree'],['那覇','shurimon'],['名護','pineapple'],['石垣','fish'],
+ [null,'mountain',null,142.85,43.6],[null,'mountain',null,140.75,39.25],[null,'whale',null,132.3,32.3],[null,'whale',null,142.6,38.3],[null,'whale',null,144.2,42.2],[null,'boat',null,139.0,33.9],[null,'boat',null,133.4,34.25],
+];
+
+function inLand(x,y){let c=false;for(const r of LAND){for(let i=0,j=r.length-1;i<r.length;j=i++){const [xi,yi]=r[i],[xj,yj]=r[j];if(((yi>y)!=(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi))c=!c}}return c}
+let DECOR_POS=null;
+const ASZ={fuji:66,mountain:54,volcano:52,whale:46};
+function placeDecor(){
+  if(DECOR_POS) return DECOR_POS;
+  const obs=[];
+  NODES.forEach(n=>obs.push([n.x,n.y,24]));
+  CITY_NODES.forEach(c=>{const n=NODES[c];obs.push([n.x,n.y-19,20],[n.x-16,n.y-19,16],[n.x+16,n.y-19,16],[n.x,n.y+18,14])});
+  EDGES.forEach(e=>{for(let k=1;k<e.pts.length;k++){const [x1,y1]=e.pts[k-1],[x2,y2]=e.pts[k];const L=Math.hypot(x2-x1,y2-y1);for(let t=0;t<L;t+=12)obs.push([x1+(x2-x1)*t/L,y1+(y2-y1)*t/L,e.kind==='ferry'?10:14])}});
+  const placed=[];
+  DECOR.forEach(([city,art,col,lon,lat])=>{
+    let ax,ay; if(city){const n=NODES[CITY_BY_NAME[city]];ax=n.x;ay=n.y}else{[ax,ay]=proj(lon,lat)}
+    const sea=art==='whale'||art==='boat';
+    let best=null,bs=-1e9;
+    for(const r of (city?[46,58,72,88]:[0,24,48,72])) for(let a=0;a<(r?16:1);a++){
+      const ang=a/16*Math.PI*2+(r%2?.2:0), x=ax+Math.cos(ang)*r, y=ay+Math.sin(ang)*r;
+      let dmin=1e9;
+      for(const [ox,oy,or] of obs){const d=Math.hypot(ox-x,oy-y)-or;if(d<dmin)dmin=d}
+      for(const p of placed){const d=Math.hypot(p.x-x,p.y-y)-22;if(d<dmin)dmin=d}
+      dmin-=((ASZ[art]||40)-40)/2;
+      const land=inLand(x,y);
+      const sc=Math.min(dmin,20)-r*.06+(sea?(land?-60:0):(land?6:-4));
+      if(sc>bs){bs=sc;best={x,y}}
+    }
+    placed.push({x:best.x,y:best.y,art,col,city});
+  });
+  return DECOR_POS=placed;
 }
 
 /* カメラ */
@@ -1176,15 +1355,45 @@ async function pay(i,m){
   }
   renderAll();
 }
+function arrivalShow(i,node,prize){
+  return new Promise(resolve=>{
+    const p=G.players[i], n=NODES[node], box=$('#arrive');
+    const d=DECOR.find(x=>x[0]===n.name)||[null,'flag','#e2452f'];
+    box.querySelector('.ar-city').textContent=`${n.name} に到着！`;
+    box.querySelector('.ar-who').innerHTML=`<span style="color:${p.color};text-shadow:none;background:#fff;border-radius:10px;padding:0 8px">●</span> ${esc(p.name)} が一番乗り！`;
+    box.querySelector('.ar-art').innerHTML=`<use href="#art-${d[1]}" x="-24" y="-26" width="48" height="48" ${d[2]?`color="${d[2]}"`:''}/>`;
+    box.querySelector('.ar-car').innerHTML=carSVG(p.color,p.car);
+    box.querySelector('.ar-sub').textContent=`名物「${MEIBUTSU[n.name]||'ごちそう'}」でお祝いだ！`;
+    const pb=box.querySelector('.ar-prize b'); pb.textContent=fmt(0);
+    box.hidden=false; sfx('fanfare');
+    // 紙吹雪
+    const cv=$('#ar-confetti'), ctx=cv.getContext('2d'); cv.width=innerWidth; cv.height=innerHeight;
+    const cols=['#e8453c','#2f7fe0','#27ae60','#f2c94c','#9b51e0','#fff','#ff8fb1'];
+    const ps=[...Array(140)].map(()=>({x:Math.random()*cv.width,y:-Math.random()*cv.height,w:6+Math.random()*6,h:8+Math.random()*8,vy:2+Math.random()*3,vx:-1+Math.random()*2,r:Math.random()*6,vr:-.2+Math.random()*.4,c:pick(cols)}));
+    let alive=true;
+    const loop=()=>{if(!alive)return;ctx.clearRect(0,0,cv.width,cv.height);
+      for(const q of ps){q.y+=q.vy;q.x+=q.vx+Math.sin(q.y/30);q.r+=q.vr;if(q.y>cv.height+20){q.y=-20;q.x=Math.random()*cv.width}
+        ctx.save();ctx.translate(q.x,q.y);ctx.rotate(q.r);ctx.fillStyle=q.c;ctx.fillRect(-q.w/2,-q.h/2,q.w,q.h*Math.abs(Math.cos(q.r*2)));ctx.restore()}
+      requestAnimationFrame(loop)};
+    loop();
+    // 賞金カウントアップ
+    setTimeout(()=>{const t0=performance.now(),dur=1200;let last=0;
+      const step=t=>{if(!alive)return;const k=Math.min(1,(t-t0)/dur);const v=Math.round(prize*k/100)*100;pb.textContent=fmt(v);
+        if(t-last>70&&k<1){sfx('tick');last=t}
+        if(k<1)requestAnimationFrame(step);else sfx('coin')};requestAnimationFrame(step)},1900);
+    const t0=Date.now();
+    const finish=()=>{if(!alive)return;alive=false;box.hidden=true;box.onclick=null;clearTimeout(auto);resolve()};
+    box.onclick=()=>{if(Date.now()-t0>2200)finish()};
+    const auto=setTimeout(finish,p.human?9000:Math.max(3600,6000*sp()));
+  });
+}
 async function arrive(i){
   const p=G.players[i];
   await checkDelivery(i,p.pos);
   const prize=round100((3000+G.destDist*300)*yf());
   p.money+=prize; renderAll();
   log(`🏁 ${p.name} が ${NODES[G.dest].name} に一番乗り！ ${fmt(prize)}`);
-  sfx('fanfare');
-  await modal({title:'🏁 目的地到着！',html:`<div class="big-msg" style="font-size:24px">🎉 ${esc(p.name)} が<br>${NODES[G.dest].name}に一番乗り！ 🎉</div>
-    <p style="text-align:center">賞金 <b style="font-size:22px;color:#f2a516">${fmt(prize)}</b></p>`});
+  await arrivalShow(i,G.dest,prize);
   // ブスブス
   if(G.players.length>1){
     const D=distFrom(G.dest);let far=-1,fd=-1;
