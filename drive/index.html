@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>ニッポン爆走ドライブ</title>
+<style>
+:root{
+  --sea:#7cc8ec; --sea2:#5fb4e0; --land:#cfe8a6; --land2:#b5d886;
+  --ink:#1f2933; --sub:#5b6875; --panel:#ffffff; --bg:#f4f1ea;
+  --blue:#2f80ed; --red:#eb5757; --yellow:#f2c94c; --sa:#9b51e0; --gold:#f2a516;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+  font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP","Yu Gothic",Meiryo,sans-serif;
+  -webkit-tap-highlight-color:transparent;overflow:hidden}
+button{font:inherit;cursor:pointer;border:none;border-radius:10px;padding:10px 14px;background:#e9edf2;color:var(--ink);font-weight:700}
+button:hover{filter:brightness(.96)}
+button:disabled{opacity:.4;cursor:default}
+button.primary{background:var(--gold);color:#fff;box-shadow:0 3px 0 #c57f00}
+button.primary:active{transform:translateY(2px);box-shadow:0 1px 0 #c57f00}
+[hidden]{display:none!important}
+
+/* ---------- タイトル ---------- */
+#title{position:fixed;inset:0;overflow:auto;background:linear-gradient(160deg,#ffd76a 0%,#ff9a52 45%,#ef5b6b 100%);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px}
+#title .card{background:#fff;border-radius:20px;padding:24px;max-width:520px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.25);margin:auto 0}
+#title h1{margin:0;font-size:clamp(28px,7vw,40px);text-align:center;letter-spacing:.04em;line-height:1.2}
+#title h1 span{display:block;font-size:.42em;color:var(--sub);letter-spacing:.1em;margin-top:6px}
+#title .road{height:28px;margin:14px 0 18px;background:#444;border-radius:6px;position:relative;overflow:hidden}
+#title .road:before{content:"";position:absolute;left:0;right:0;top:12px;height:4px;background:repeating-linear-gradient(90deg,#fff 0 22px,transparent 22px 40px);animation:road 0.6s linear infinite}
+#title .road .tc{position:absolute;top:-4px;font-size:26px;animation:drive 5s linear infinite}
+@keyframes road{to{background-position:-40px 0}}
+@keyframes drive{from{left:-40px}to{left:100%}}
+.prow{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.prow .chip{width:16px;height:16px;border-radius:50%;flex:none}
+.prow input{flex:1;min-width:0;padding:9px 10px;border:2px solid #e2e6ea;border-radius:10px;font:inherit}
+.prow select,.opt select{padding:9px 8px;border:2px solid #e2e6ea;border-radius:10px;font:inherit;background:#fff}
+.opt{display:flex;justify-content:space-between;align-items:center;margin:10px 0}
+.rules{font-size:13px;color:var(--sub);line-height:1.7;background:#f7f7f4;border-radius:12px;padding:10px 14px;margin-top:14px}
+.rules b{color:var(--ink)}
+#title .go{width:100%;font-size:20px;padding:14px;margin-top:10px}
+
+/* ---------- ゲーム画面 ---------- */
+#game{position:fixed;inset:0;display:flex;flex-direction:column}
+#top{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#263445;color:#fff;flex:none}
+#top .date{font-weight:800;font-size:18px;white-space:nowrap}
+#top .dest{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#top .dest b{color:#ffd76a;font-size:17px}
+#top button{background:#3b4d63;color:#fff;padding:6px 12px}
+#main{flex:1;display:flex;min-height:0}
+#mapWrap{flex:1;position:relative;min-width:0;background:var(--sea);overflow:hidden;touch-action:none}
+#map{width:100%;height:100%;display:block;cursor:grab}
+#map.dragging{cursor:grabbing}
+#side{width:290px;flex:none;background:var(--panel);display:flex;flex-direction:column;border-left:1px solid #e3e3e3;min-height:0}
+#players{padding:8px;display:flex;flex-direction:column;gap:6px}
+.pc{border:2px solid #eee;border-radius:12px;padding:7px 10px;font-size:13px;line-height:1.5;position:relative}
+.pc.now{border-color:var(--gold);box-shadow:0 0 0 3px rgba(242,165,22,.25)}
+.pc .nm{font-weight:800;font-size:15px;display:flex;align-items:center;gap:6px}
+.pc .nm i{width:12px;height:12px;border-radius:50%;display:inline-block}
+.pc .money{font-weight:800}
+.pc .money.neg{color:var(--red)}
+.pc .ghost{position:absolute;right:8px;top:4px;font-size:22px}
+.pc .meta{color:var(--sub)}
+#log{flex:1;overflow:auto;border-top:1px solid #eee;padding:8px 10px;font-size:12px;color:var(--sub);line-height:1.6}
+#log div{border-bottom:1px dashed #eee;padding:2px 0}
+#actions{flex:none;background:#fff;border-top:1px solid #e3e3e3;padding:10px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;min-height:62px;align-items:center}
+#actions .hint{width:100%;text-align:center;font-weight:700;font-size:14px}
+#actions .big{font-size:18px;padding:12px 22px}
+#actions .endbtn{font-size:13px;padding:8px 10px;border:2px solid #ddd;background:#fff}
+#actions .endbtn small{display:block;font-weight:400;color:var(--sub);font-size:11px}
+#mapCtrls{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:6px}
+#mapCtrls button{width:42px;height:42px;padding:0;font-size:20px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+#toast{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:rgba(20,28,38,.88);color:#fff;padding:10px 18px;border-radius:14px;font-weight:700;font-size:16px;max-width:92%;text-align:center;pointer-events:none;opacity:0;transition:opacity .2s}
+#toast.show{opacity:1}
+#dice{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;gap:12px}
+#dice .row{display:flex;gap:12px}
+#dice .d{width:70px;height:70px;border-radius:16px;background:#fff;box-shadow:0 6px 0 #c8c8c8,0 10px 20px rgba(0,0,0,.25);display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:10px}
+#dice .d i{width:12px;height:12px;border-radius:50%;background:#263445;margin:auto;visibility:hidden}
+#dice .d.one i{background:var(--red)}
+#dice .d.spin{animation:shake .12s infinite}
+#dice .sum{background:var(--gold);color:#fff;font-weight:900;font-size:28px;padding:6px 20px;border-radius:30px;box-shadow:0 4px 0 #c57f00}
+@keyframes shake{0%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}100%{transform:rotate(-8deg)}}
+
+/* SVG */
+.lbl{font-size:13px;font-weight:800;fill:#263445;paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round;pointer-events:none}
+.sqtext{font-size:9px;font-weight:900;fill:#fff;pointer-events:none}
+.hl{fill:rgba(255,215,64,.35);stroke:#ffb300;stroke-width:4;cursor:pointer;animation:pulse 1s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes pulse{0%,100%{transform:scale(.85)}50%{transform:scale(1.1)}}
+.destRing{fill:none;stroke:#ff3d6e;stroke-width:4;stroke-dasharray:6 5;animation:spinring 6s linear infinite;transform-box:fill-box;transform-origin:center}
+@keyframes spinring{to{transform:rotate(360deg)}}
+.tok{transition:transform .16s linear}
+.bob{animation:bob .3s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-2px)}}
+
+/* モーダル */
+#modal{position:fixed;inset:0;background:rgba(10,15,25,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+#modal .box{background:#fff;border-radius:18px;max-width:560px;width:100%;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 50px rgba(0,0,0,.35);animation:pop .18s ease-out}
+@keyframes pop{from{transform:scale(.9);opacity:0}}
+#modal h2{margin:0;padding:14px 18px;font-size:19px;border-bottom:1px solid #eee}
+#modal .body{padding:14px 18px;overflow:auto;line-height:1.7}
+#modal .btns{padding:12px 18px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;border-top:1px solid #eee}
+.shop{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f0f0}
+.shop .n{flex:1;min-width:0}
+.shop .n b{display:block}
+.shop .n small{color:var(--sub)}
+.shop .own{font-size:12px;font-weight:700;padding:4px 8px;border-radius:8px;color:#fff;white-space:nowrap}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl td,.tbl th{padding:6px 4px;border-bottom:1px solid #eee;text-align:right}
+.tbl td:first-child,.tbl th:first-child{text-align:left}
+.big-msg{font-size:18px;font-weight:800;text-align:center;margin:6px 0}
+.cardi{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0}
+.cardi .ic{font-size:26px;width:36px;text-align:center}
+.cardi .n{flex:1}
+.cardi .n small{display:block;color:var(--sub)}
+
+@media (max-width:760px){
+  #main{flex-direction:column}
+  #side{width:auto;border-left:none;border-bottom:1px solid #e3e3e3;order:-1;flex:none}
+  #players{flex-direction:row;overflow-x:auto;padding:6px}
+  .pc{min-width:140px;font-size:12px;padding:5px 8px}
+  .pc .nm{font-size:13px}
+  .pc .meta2{display:none}
+  #log{display:none}
+  #top .date{font-size:15px}
+  #top .dest{font-size:12px}
+  #dice .d{width:56px;height:56px;padding:8px}
+  #actions{max-height:38vh;overflow:auto;padding:8px;gap:6px}
+  #actions .hint{font-size:12px}
+  #actions .endbtn{font-size:12px;padding:6px 8px}
+  #actions .endbtn small{font-size:10px}
+}
+</style>
+</head>
+<body>
+
+<!-- タイトル -->
+<div id="title">
+  <div class="card">
+    <h1>ニッポン爆走ドライブ<span>〜 くるまで日本一周すごろく 〜</span></h1>
+    <div class="road"><span class="tc">🚗</span></div>
+    <div id="setup"></div>
+    <div class="opt"><label>プレイ年数</label>
+      <select id="years"><option value="1">1年（お試し）</option><option value="3" selected>3年</option><option value="5">5年</option><option value="10">10年</option></select></div>
+    <div class="opt"><label>CPUのスピード</label>
+      <select id="speed"><option value="1">ふつう</option><option value="0.5" selected>はやい</option><option value="0.25">爆速</option></select></div>
+    <button class="primary go" id="startBtn">エンジン始動！</button>
+    <button class="go" id="resumeBtn" hidden>つづきから</button>
+    <div class="rules">
+      <b>あそびかた</b><br>
+      🎲 サイコロをふって日本中の道をドライブ。光ったマスから止まる場所を選べるよ。<br>
+      🏁 <b>目的地</b>に一番乗りすると賞金ゲット！<br>
+      🏪 都市に止まったら<b>お店</b>を買える。毎年3月の決算で収益が入る。同じ都市を全部買い占めると収益2倍！<br>
+      🔵 青マス＝お金がもらえる　🔴 赤マス＝お金がへる　🟡 黄マス＝カードがもらえる　🟣 SA＝カードが買える<br>
+      👻 目的地から一番遠い人には、ガス欠おばけ「<b>ブスブス</b>」が取りつく。ほかの車を追いこすと押しつけられる！<br>
+      最後に<b>総資産</b>（お金＋お店の価値）が一番多い人の優勝！
+    </div>
+  </div>
+</div>
+
+<!-- ゲーム -->
+<div id="game" hidden>
+  <div id="top">
+    <div class="date" id="date"></div>
+    <div class="dest" id="dest"></div>
+    <button id="menuBtn">メニュー</button>
+  </div>
+  <div id="main">
+    <div id="mapWrap">
+      <svg id="map" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="toast"></div>
+      <div id="dice" hidden></div>
+      <div id="mapCtrls">
+        <button id="zIn" title="拡大">＋</button>
+        <button id="zOut" title="縮小">－</button>
+        <button id="zMe" title="現在地">◎</button>
+      </div>
+    </div>
+    <aside id="side">
+      <div id="players"></div>
+      <div id="log"></div>
+    </aside>
+  </div>
+  <div id="actions"></div>
+</div>
+
+<div id="modal" hidden><div class="box"><h2></h2><div class="body"></div><div class="btns"></div></div></div>
+
+<script>
+"use strict";
+/* =========================================================
+   データ
+   ========================================================= */
+// [名前, 経度, 緯度, [[店名, 価格(万円), 収益率%], ...]]
+const CITY_DATA = [
+ ['稚内',141.67,45.41,[['最北端みやげ店',1000,12],['利尻昆布問屋',2500,6],['ホタテ漁場',4000,5]]],
+ ['旭川',142.37,43.77,[['しょうゆラーメン村',3000,8],['動物園ショップ',2000,10],['家具工房',6000,5]]],
+ ['札幌',141.35,43.06,[['スープカレー店',3000,12],['味噌ラーメン横丁',5000,8],['ビール園',20000,5],['時計台ホテル',40000,3]]],
+ ['帯広',143.20,42.92,[['豚丼屋',2000,12],['ばんえい牧場',5000,5],['菓子本舗',8000,6]]],
+ ['釧路',144.38,42.98,[['炉端焼き',1500,10],['湿原カヌーツアー',3000,6],['製紙工場',20000,3]]],
+ ['函館',140.73,41.77,[['塩ラーメン店',1500,12],['朝市の海鮮丼',2500,9],['夜景ロープウェイ',15000,4]]],
+ ['青森',140.74,40.82,[['ホタテ釣り堀',1000,10],['りんご園',3000,7],['ねぶた工房',5000,5]]],
+ ['秋田',140.10,39.72,[['きりたんぽ屋',1500,10],['稲庭うどん',3000,8],['酒蔵',8000,5]]],
+ ['盛岡',141.15,39.70,[['わんこそば',2000,10],['冷麺店',2500,9],['南部鉄器工房',6000,5]]],
+ ['山形',140.36,38.24,[['芋煮会場',1000,12],['さくらんぼ園',4000,7],['温泉旅館',12000,4]]],
+ ['仙台',140.87,38.27,[['ずんだ茶屋',1500,12],['七夕飾り屋',3000,6],['牛たん屋',5000,9],['港の倉庫',30000,3]]],
+ ['福島',140.47,37.75,[['赤べこ工房',1000,10],['喜多方ラーメン',2000,10],['桃園',3000,8]]],
+ ['新潟',139.02,37.90,[['へぎそば',2000,9],['米どころ農場',10000,5],['日本酒蔵',15000,4]]],
+ ['宇都宮',139.88,36.56,[['餃子専門店',2500,12],['日光みやげ',3000,7],['いちご農園',4000,7]]],
+ ['長野',138.19,36.65,[['そば打ち処',2000,9],['りんご酒工房',5000,6],['スキー場',30000,3]]],
+ ['金沢',136.65,36.56,[['茶屋街カフェ',3000,9],['近江町の寿司',6000,7],['金箔工芸',8000,5]]],
+ ['東京',139.69,35.69,[['下町もんじゃ',5000,8],['電気街ショップ',30000,4],['高級すし',50000,3],['高層ビル',200000,2]]],
+ ['横浜',139.64,35.44,[['家系ラーメン',3000,10],['中華街肉まん',4000,10],['港の観覧車',30000,3]]],
+ ['千葉',140.12,35.61,[['漁港食堂',1500,10],['落花生農家',2000,8],['リゾートホテル',60000,3]]],
+ ['静岡',138.38,34.98,[['茶畑',3000,7],['うなぎ屋',6000,7],['プラモデル工場',20000,4]]],
+ ['名古屋',136.91,35.18,[['喫茶モーニング',1500,14],['みそカツ',3000,10],['ひつまぶし',6000,8],['自動車工場',150000,2]]],
+ ['京都',135.77,35.01,[['湯どうふ屋',3000,8],['八ツ橋本舗',4000,8],['老舗旅館',40000,3]]],
+ ['大阪',135.50,34.69,[['たこ焼き屋',1500,15],['串カツ',2500,12],['お好み焼き',3000,10],['商業ビル',100000,2]]],
+ ['神戸',135.19,34.69,[['洋菓子店',4000,8],['神戸牛ステーキ',15000,5],['港の倉庫',25000,3]]],
+ ['岡山',133.92,34.66,[['きびだんご',1500,12],['桃農家',3000,7],['デニム工房',8000,5]]],
+ ['鳥取',134.24,35.50,[['砂丘ラクダ',1000,12],['梨園',2500,7],['カニ料理',5000,6]]],
+ ['松江',133.05,35.47,[['しじみ漁',1500,10],['出雲そば',2000,9],['縁結びみやげ',4000,8]]],
+ ['広島',132.46,34.39,[['お好み焼き',2500,12],['牡蠣小屋',3000,9],['もみじ饅頭',4000,9],['造船所',60000,3]]],
+ ['山口',131.47,34.19,[['瓦そば',1500,11],['秋吉台観光',5000,5],['ふぐ料理',8000,6]]],
+ ['高松',134.04,34.34,[['讃岐うどん',1000,18],['骨付鳥',2000,12],['庭園茶屋',5000,5]]],
+ ['松山',132.77,33.84,[['鯛めし',2500,9],['みかん園',3000,8],['温泉宿',20000,4]]],
+ ['高知',133.53,33.56,[['よさこい衣装',2000,7],['ゆず農園',2500,8],['カツオのたたき',3000,9]]],
+ ['福岡',130.40,33.59,[['屋台ラーメン',2000,14],['もつ鍋',3000,10],['明太子店',6000,8],['天神ビル',80000,2]]],
+ ['長崎',129.87,32.75,[['ちゃんぽん',2000,12],['カステラ本舗',5000,8],['造船ドック',40000,3]]],
+ ['熊本',130.71,32.80,[['太平燕',1500,10],['馬刺し',4000,8],['阿蘇牧場',10000,5]]],
+ ['大分',131.61,33.24,[['とり天',1500,11],['関さば',4000,7],['地獄めぐり温泉',8000,6]]],
+ ['宮崎',131.42,31.91,[['地鶏炭火焼',2000,10],['マンゴー農園',5000,8],['南国ホテル',15000,4]]],
+ ['鹿児島',130.56,31.60,[['黒豚とんかつ',3000,9],['焼酎蔵',10000,5],['桜島フェリー',20000,3]]],
+];
+// 混み合う地域の位置調整
+const NUDGE = {'東京':[1240,1380],'横浜':[1195,1440],'千葉':[1310,1420],'京都':[815,1470],'大阪':[775,1530],'神戸':[715,1525],
+  '高松':[625,1610],'山形':[1280,1040],'仙台':[1380,1030],'福島':[1320,1130]};
+// [都市A, 都市B, 種類]  road / bridge / ferry
+const ROADS = [
+ ['稚内','旭川'],['旭川','札幌'],['旭川','帯広'],['札幌','帯広'],['帯広','釧路'],['札幌','函館'],['函館','青森','ferry'],
+ ['青森','秋田'],['青森','盛岡'],['秋田','盛岡'],['秋田','山形'],['盛岡','仙台'],['山形','仙台'],['山形','新潟'],['仙台','福島'],
+ ['福島','宇都宮'],['福島','新潟'],['新潟','長野'],['新潟','金沢'],['宇都宮','東京'],['東京','千葉'],['東京','横浜'],['東京','長野'],
+ ['千葉','横浜','bridge'],['横浜','静岡'],['静岡','名古屋'],['長野','名古屋'],['金沢','名古屋'],['金沢','京都'],['名古屋','京都'],
+ ['京都','大阪'],['大阪','神戸'],['神戸','岡山'],['神戸','高松','bridge'],['岡山','高松','bridge'],['岡山','鳥取'],['鳥取','松江'],
+ ['岡山','広島'],['松江','広島'],['松江','山口'],['広島','山口'],['広島','松山','bridge'],['高松','松山'],['高松','高知'],['松山','高知'],
+ ['松山','大分','ferry'],['山口','福岡','bridge'],['福岡','長崎'],['福岡','熊本'],['福岡','大分'],['熊本','長崎','ferry'],['熊本','大分'],
+ ['熊本','鹿児島'],['大分','宮崎'],['宮崎','鹿児島'],
+];
+const CARDS = {
+  turbo: {ic:'🔥',name:'ターボ',desc:'サイコロ2個で進む',price:800,move:true},
+  nitro: {ic:'🚀',name:'ニトロ',desc:'サイコロ3個で進む',price:2500,move:true},
+  jet:   {ic:'✈️',name:'ジェットエンジン',desc:'サイコロ4個で進む',price:6000,move:true},
+  just:  {ic:'🎯',name:'ぴったり',desc:'進む数を1〜6から選べる',price:1500,move:true},
+  warp:  {ic:'🌀',name:'ワープ',desc:'どこかの都市へ一瞬で移動',price:1000,move:true},
+  oharai:{ic:'🧂',name:'おはらい塩',desc:'ブスブスを追いはらう',price:3000},
+  toll:  {ic:'🚧',name:'通行止め',desc:'ライバル1人を1回休みにする',price:2000},
+  jaf:   {ic:'🛠️',name:'ロードサービス',desc:'赤マスの支払いを1回だけ防ぐ（持ってるだけで自動）',price:1200,passive:true},
+  bonus: {ic:'💰',name:'臨時ボーナス',desc:'使うとお金がもらえる',price:0},
+};
+const YELLOW_TABLE = {turbo:30,nitro:12,jet:3,just:12,warp:10,oharai:6,toll:8,jaf:10,bonus:15};
+const SHOP_LIST = ['turbo','nitro','just','warp','oharai','toll','jaf'];
+const COLORS = ['#e8453c','#2f7fe0','#27ae60','#f39c12'];
+const PNAMES = ['あなた','CPUたろう','CPUはなこ','CPUじろう'];
+const HAND_MAX = 8;
+const SAVE_KEY = 'nippon-drive-save-v1';
+
+/* =========================================================
+   マップ生成（固定シードで毎回同じ）
+   ========================================================= */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const mrnd = mulberry32(20261127);
+const NODES = [];   // {id,x,y,type,city?}
+const ADJ = [];
+const EDGES = [];   // 描画用 {a,b,kind,cx,cy}
+const CITY_BY_NAME = {};
+const CITY_NODES = [];
+const SHOPS = [];   // {id,city,name,price,rate}
+function addNode(o){o.id=NODES.length;NODES.push(o);ADJ.push([]);return o.id}
+function link(a,b){ADJ[a].push(b);ADJ[b].push(a)}
+CITY_DATA.forEach(([name,lon,lat,shops])=>{
+  let x=(lon-129)*110+60, y=(45.7-lat)*135+40;
+  if(NUDGE[name]) [x,y]=NUDGE[name];
+  const id=addNode({x,y,type:'city',name,shops:[]});
+  CITY_BY_NAME[name]=id; CITY_NODES.push(id);
+  shops.forEach(([n,p,r])=>{const sid=SHOPS.length;SHOPS.push({id:sid,city:id,name:n,price:p,rate:r});NODES[id].shops.push(sid)});
+});
+ROADS.forEach(([an,bn,kind='road'])=>{
+  const a=CITY_BY_NAME[an], b=CITY_BY_NAME[bn], A=NODES[a], B=NODES[b];
+  const dx=B.x-A.x, dy=B.y-A.y, d=Math.hypot(dx,dy);
+  const steps=Math.max(1,Math.round(d/44));
+  const off=(mrnd()-.5)*d*.28, mx=(A.x+B.x)/2-dy/d*off, my=(A.y+B.y)/2+dx/d*off;
+  EDGES.push({a,b,kind,cx:mx,cy:my});
+  let prev=a;
+  for(let k=1;k<steps;k++){
+    const t=k/steps, u=1-t;
+    const x=u*u*A.x+2*u*t*mx+t*t*B.x, y=u*u*A.y+2*u*t*my+t*t*B.y;
+    const r=mrnd();
+    const type = r<.42?'blue':r<.72?'red':r<.88?'yellow':'sa';
+    const id=addNode({x,y,type});
+    link(prev,id); prev=id;
+  }
+  link(prev,b);
+});
+const TYPE_NAME={city:'都市',blue:'青マス',red:'赤マス',yellow:'黄マス',sa:'SA'};
+
+const distCache={};
+function distFrom(t){
+  if(distCache[t]) return distCache[t];
+  const D=new Array(NODES.length).fill(1e9); D[t]=0; const q=[t];
+  for(let i=0;i<q.length;i++){const n=q[i];for(const m of ADJ[n]) if(D[m]>D[n]+1){D[m]=D[n]+1;q.push(m)}}
+  return distCache[t]=D;
+}
+
+/* =========================================================
+   ユーティリティ
+   ========================================================= */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rand=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=arr=>arr[Math.floor(Math.random()*arr.length)];
+function wpick(table){let s=0;for(const k in table)s+=table[k];let r=Math.random()*s;for(const k in table){r-=table[k];if(r<0)return k}return Object.keys(table)[0]}
+function fmt(m){m=Math.round(m);const neg=m<0;m=Math.abs(m);let s;
+  if(m>=10000){const o=Math.floor(m/10000),man=m%10000;s=o+'億'+(man?man+'万':'')+'円'}else s=m+'万円';
+  return (neg?'-':'')+s}
+let G=null;
+const isHumanTurn=()=>G&&G.players[G.turn]&&G.players[G.turn].human;
+const sp=()=> (G && !isHumanTurn()) ? G.speed : (G?Math.max(G.speed,0.5):1);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms*sp()));
+const yf=()=>1+(G.year-1)*0.25;
+const round100=v=>Math.max(100,Math.round(v/100)*100);
+
+/* =========================================================
+   SVG 描画
+   ========================================================= */
+const svg=$('#map'); const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+let layerTok, layerHL, layerOwn, layerDest;
+function edgePath(e){const A=NODES[e.a],B=NODES[e.b];return `M${A.x},${A.y} Q${e.cx},${e.cy} ${B.x},${B.y}`}
+function buildMap(){
+  svg.innerHTML='';
+  const defs=el('defs',{},svg);
+  const pat=el('pattern',{id:'waves',width:60,height:30,patternUnits:'userSpaceOnUse'},defs);
+  el('path',{d:'M0 15 Q15 5 30 15 T60 15',fill:'none',stroke:'rgba(255,255,255,.25)','stroke-width':2},pat);
+  el('rect',{x:-2000,y:-2000,width:6000,height:6000,fill:'url(#waves)'},svg);
+  // 陸地：道路を太く塗って島っぽくする
+  const land=el('g',{},svg);
+  for(const pass of [[96,'#e9e2c4'],[70,'#cfe8a6'],[40,'#bfe090']]){
+    const g=el('g',{},land);
+    EDGES.filter(e=>e.kind==='road').forEach(e=>el('path',{d:edgePath(e),fill:'none',stroke:pass[1],'stroke-width':pass[0],'stroke-linecap':'round'},g));
+    CITY_NODES.forEach(c=>el('circle',{cx:NODES[c].x,cy:NODES[c].y,r:pass[0]/2+6,fill:pass[1]},g));
+  }
+  // 道
+  const roads=el('g',{},svg);
+  EDGES.forEach(e=>{
+    if(e.kind==='ferry'){el('path',{d:edgePath(e),fill:'none',stroke:'#fff','stroke-width':4,'stroke-dasharray':'2 10','stroke-linecap':'round'},roads);return}
+    if(e.kind==='bridge'){el('path',{d:edgePath(e),fill:'none',stroke:'#8a6d4b','stroke-width':14,'stroke-linecap':'round'},roads);
+      el('path',{d:edgePath(e),fill:'none',stroke:'#d9c4a3','stroke-width':8},roads);return}
+    el('path',{d:edgePath(e),fill:'none',stroke:'#7d8a77','stroke-width':12,'stroke-linecap':'round'},roads);
+    el('path',{d:edgePath(e),fill:'none',stroke:'#f7f3e6','stroke-width':7,'stroke-linecap':'round'},roads);
+  });
+  // マス
+  const sq=el('g',{},svg);
+  const col={blue:'#2f80ed',red:'#eb5757',yellow:'#f2c94c',sa:'#9b51e0'};
+  NODES.forEach(n=>{
+    if(n.type==='city'){
+      el('rect',{x:n.x-17,y:n.y-12,width:34,height:24,rx:6,fill:'#fff',stroke:'#263445','stroke-width':3},sq);
+      el('rect',{x:n.x-11,y:n.y-6,width:22,height:12,rx:2,fill:'#ffb547'},sq);
+    }else{
+      el('circle',{cx:n.x,cy:n.y,r:11,fill:col[n.type],stroke:'#fff','stroke-width':3},sq);
+      if(n.type==='sa'){const t=el('text',{x:n.x,y:n.y+3.5,'text-anchor':'middle',class:'sqtext'},sq);t.textContent='SA'}
+      if(n.type==='yellow'){const t=el('text',{x:n.x,y:n.y+3.5,'text-anchor':'middle',class:'sqtext',style:'fill:#7a5a00'},sq);t.textContent='?'}
+    }
+  });
+  layerOwn=el('g',{},svg);
+  // 都市名
+  const lbl=el('g',{},svg);
+  CITY_NODES.forEach(c=>{const n=NODES[c];const t=el('text',{x:n.x,y:n.y-19,'text-anchor':'middle',class:'lbl'},lbl);t.textContent=n.name});
+  layerDest=el('g',{},svg);
+  layerHL=el('g',{},svg);
+  layerTok=el('g',{},svg);
+}
+function carSVG(color){
+  return `<g class="bob"><ellipse cx="0" cy="7" rx="15" ry="3" fill="rgba(0,0,0,.25)"/>
+  <path d="M-15 3 L-15 -4 Q-15 -7 -11 -7 L-7 -7 L-3 -13 L7 -13 L11 -7 L13 -7 Q16 -7 16 -3 L16 3 Z" fill="${color}" stroke="#1d2530" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M-5 -7.5 L-2 -11.5 L1.5 -11.5 L1.5 -7.5 Z M3.5 -7.5 L3.5 -11.5 L6.5 -11.5 L9 -7.5 Z" fill="#d8f1ff"/>
+  <rect x="12" y="-5" width="3" height="2.5" rx="1" fill="#fff7b0"/>
+  <circle cx="-8" cy="3.5" r="4" fill="#1d2530"/><circle cx="-8" cy="3.5" r="1.6" fill="#bbb"/>
+  <circle cx="9" cy="3.5" r="4" fill="#1d2530"/><circle cx="9" cy="3.5" r="1.6" fill="#bbb"/></g>`;
+}
+const tokEls=[];
+function buildTokens(){
+  layerTok.innerHTML=''; tokEls.length=0;
+  G.players.forEach((p,i)=>{const g=el('g',{class:'tok'},layerTok);g.innerHTML=carSVG(p.color);tokEls.push(g)});
+  ghostEl=el('text',{'font-size':26,'text-anchor':'middle',class:'tok'},layerTok); ghostEl.textContent='👻';
+}
+let ghostEl;
+function tokenXY(i,node){
+  const n=NODES[node];
+  const same=G.players.map((p,j)=>j).filter(j=>G.players[j].pos===node);
+  const k=same.indexOf(i), cnt=same.length;
+  const off = cnt>1 ? (k-(cnt-1)/2)*14 : 0;
+  return [n.x+off, n.y-12-(cnt>1?k*3:0)];
+}
+function renderTokens(){
+  G.players.forEach((p,i)=>{
+    const [x,y]=tokenXY(i,p.pos);
+    tokEls[i].setAttribute('transform',`translate(${x},${y})`);
+    if(i===G.turn) layerTok.appendChild(tokEls[i]);
+  });
+  if(G.ghost.holder>=0){
+    const [x,y]=tokenXY(G.ghost.holder,G.players[G.ghost.holder].pos);
+    ghostEl.setAttribute('transform',`translate(${x+16},${y-14})`);
+    ghostEl.setAttribute('font-size',G.ghost.level>1?34:24);
+    ghostEl.style.display=''; layerTok.appendChild(ghostEl);
+  }else ghostEl.style.display='none';
+}
+function renderOwners(){
+  layerOwn.innerHTML='';
+  CITY_NODES.forEach(c=>{
+    const n=NODES[c], s=n.shops, w=8, gap=2, tot=s.length*w+(s.length-1)*gap;
+    const mono=monopolyOwner(c);
+    if(mono>=0) el('rect',{x:n.x-20,y:n.y-15,width:40,height:30,rx:8,fill:'none',stroke:G.players[mono].color,'stroke-width':4},layerOwn);
+    s.forEach((sid,k)=>{
+      const o=G.owner[sid];
+      el('rect',{x:n.x-tot/2+k*(w+gap),y:n.y+15,width:w,height:6,rx:1.5,fill:o==null?'#ffffff':G.players[o].color,stroke:'#263445','stroke-width':1},layerOwn);
+    });
+  });
+}
+function renderDest(){
+  layerDest.innerHTML='';
+  if(G.dest==null) return;
+  const n=NODES[G.dest];
+  el('circle',{cx:n.x,cy:n.y,r:28,class:'destRing'},layerDest);
+  const t=el('text',{x:n.x+14,y:n.y-24,'font-size':26},layerDest); t.textContent='🏁';
+}
+
+/* カメラ */
+const cam={x:1240,y:1380,z:1}, camT={x:1240,y:1380,z:1};
+function applyCam(){
+  const w=svg.clientWidth/cam.z, h=svg.clientHeight/cam.z;
+  if(!w||!h) return;
+  svg.setAttribute('viewBox',`${cam.x-w/2} ${cam.y-h/2} ${w} ${h}`);
+}
+(function camLoop(){
+  const k=.15;
+  cam.x+=(camT.x-cam.x)*k; cam.y+=(camT.y-cam.y)*k; cam.z+=(camT.z-cam.z)*k;
+  applyCam(); requestAnimationFrame(camLoop);
+})();
+function focusNode(node){const n=NODES[node];camT.x=n.x;camT.y=n.y}
+function setZoom(z){camT.z=Math.min(2.6,Math.max(.3,z))}
+(function setupPan(){
+  let drag=null;
+  svg.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,cx:camT.x,cy:camT.y,moved:false};svg.setPointerCapture(e.pointerId)});
+  svg.addEventListener('pointermove',e=>{
+    if(!drag) return;
+    const dx=e.clientX-drag.x, dy=e.clientY-drag.y;
+    if(Math.hypot(dx,dy)>6){drag.moved=true;svg.classList.add('dragging')}
+    if(drag.moved){camT.x=cam.x=drag.cx-dx/cam.z;camT.y=cam.y=drag.cy-dy/cam.z}
+  });
+  const up=e=>{
+    if(drag && !drag.moved){
+      // クリック判定（ポインタキャプチャで target が svg になるため座標から判定）
+      const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;
+      const p=pt.matrixTransform(svg.getScreenCTM().inverse());
+      if(pickHandler) pickHandler(p.x,p.y);
+    }
+    drag=null;svg.classList.remove('dragging');
+  };
+  svg.addEventListener('pointerup',up); svg.addEventListener('pointercancel',()=>{drag=null;svg.classList.remove('dragging')});
+  svg.addEventListener('wheel',e=>{e.preventDefault();setZoom(camT.z*(e.deltaY<0?1.15:1/1.15))},{passive:false});
+  $('#zIn').onclick=()=>setZoom(camT.z*1.3);
+  $('#zOut').onclick=()=>setZoom(camT.z/1.3);
+  $('#zMe').onclick=()=>{if(G)focusNode(G.players[G.turn].pos)};
+  window.addEventListener('resize',applyCam);
+})();
+let pickHandler=null;
+
+/* =========================================================
+   UI
+   ========================================================= */
+function log(msg){
+  G.log.unshift(msg); if(G.log.length>60)G.log.length=60;
+  renderLog();
+}
+function renderLog(){$('#log').innerHTML=G.log.map(m=>`<div>${m}</div>`).join('')}
+let toastTimer;
+async function toast(msg,ms=1300){
+  const t=$('#toast'); t.innerHTML=msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  await sleep(ms);
+  t.classList.remove('show');
+  await sleep(150);
+}
+function totalAssets(i){const p=G.players[i];let s=p.money;for(const sid in G.owner)if(G.owner[sid]===i)s+=SHOPS[sid].price;return s}
+function propsOf(i){return Object.keys(G.owner).filter(s=>G.owner[s]===i).map(Number)}
+function monopolyOwner(c){const s=NODES[c].shops;const o=G.owner[s[0]];if(o==null)return -1;return s.every(x=>G.owner[x]===o)?o:-1}
+function yearlyIncome(i){
+  let s=0;for(const sid of propsOf(i)){const sh=SHOPS[sid];s+=sh.price*sh.rate/100*(monopolyOwner(sh.city)===i?2:1)}return Math.round(s)
+}
+function renderHUD(){
+  $('#date').textContent=`${G.year}年目 ${G.month}月`;
+  const p=G.players[G.turn];
+  const D=G.dest!=null?distFrom(G.dest):null;
+  $('#dest').innerHTML = G.dest!=null ? `🏁 目的地 <b>${NODES[G.dest].name}</b>　${esc(p.name)}から あと${D[p.pos]}マス` : '';
+  $('#players').innerHTML=G.players.map((q,i)=>`
+    <div class="pc ${i===G.turn?'now':''}">
+      ${G.ghost.holder===i?`<span class="ghost" title="ブスブス">${G.ghost.level>1?'👻👻':'👻'}</span>`:''}
+      <div class="nm"><i style="background:${q.color}"></i>${esc(q.name)}${q.human?'':' <small style="color:#999;font-weight:400">CPU</small>'}</div>
+      <div class="money ${q.money<0?'neg':''}">💴 ${fmt(q.money)}</div>
+      <div class="meta">資産 ${fmt(totalAssets(i))}</div>
+      <div class="meta meta2">🃏${q.cards.length}枚　🏪${propsOf(i).length}軒　🏁あと${D?D[q.pos]:'-'}${q.skip?'　💤休み':''}</div>
+    </div>`).join('');
+}
+function renderAll(){renderHUD();renderTokens();renderOwners();renderDest()}
+
+/* モーダル */
+function modal({title,html='',buttons=[{label:'OK',value:true,cls:'primary'}],render}){
+  return new Promise(resolve=>{
+    const m=$('#modal'); m.hidden=false;
+    m.querySelector('h2').innerHTML=title;
+    const body=m.querySelector('.body'), btns=m.querySelector('.btns');
+    body.innerHTML=html; btns.innerHTML='';
+    const close=v=>{m.hidden=true;body.innerHTML='';resolve(v)};
+    buttons.forEach(b=>{const e=document.createElement('button');e.innerHTML=b.label;if(b.cls)e.className=b.cls;e.onclick=()=>close(b.value);btns.appendChild(e)});
+    if(render) render(body,close);
+    const first=btns.querySelector('.primary'); if(first) setTimeout(()=>first.focus(),50);
+  });
+}
+// 人間なら確認モーダル、CPUならトースト
+async function say(msg,{title='お知らせ',force=false}={}){
+  log(msg.replace(/<[^>]+>/g,''));
+  if(isHumanTurn()||force) await modal({title,html:`<div class="big-msg">${msg}</div>`});
+  else await toast(msg,1400);
+}
+
+/* サイコロ */
+const PIPS={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
+function dieHTML(v,spin){return `<div class="d ${v===1?'one':''} ${spin?'spin':''}">${[...Array(9)].map((_,k)=>`<i style="visibility:${PIPS[v].includes(k)?'visible':'hidden'}"></i>`).join('')}</div>`}
+async function rollDice(n){
+  const box=$('#dice'); box.hidden=false;
+  const vals=[...Array(n)].map(()=>rand(1,6));
+  const t0=Date.now(), dur=700*sp()+200;
+  while(Date.now()-t0<dur){
+    box.innerHTML=`<div class="row">${[...Array(n)].map(()=>dieHTML(rand(1,6),true)).join('')}</div>`;
+    await new Promise(r=>setTimeout(r,70));
+  }
+  const sum=vals.reduce((a,b)=>a+b,0);
+  box.innerHTML=`<div class="row">${vals.map(v=>dieHTML(v)).join('')}</div><div class="sum">${sum}マス すすむ！</div>`;
+  await sleep(900);
+  box.hidden=true;
+  return sum;
+}
+
+/* =========================================================
+   ゲーム進行
+   ========================================================= */
+function newGame(setup,years,speed){
+  const start=CITY_BY_NAME['東京'];
+  G={year:1,month:4,turn:0,years,speed,
+    players:setup.map(s=>({name:s.name,color:s.color,human:s.human,pos:start,money:10000,cards:['turbo'],skip:0})),
+    owner:{},ghost:{holder:-1,level:1,months:0},dest:null,destDist:0,log:[],started:false};
+}
+function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(G))}catch(e){}}
+function loadSave(){try{const s=localStorage.getItem(SAVE_KEY);return s?JSON.parse(s):null}catch(e){return null}}
+function clearSave(){try{localStorage.removeItem(SAVE_KEY)}catch(e){}}
+
+async function startGame(){
+  $('#title').hidden=true; $('#game').hidden=false;
+  buildMap(); buildTokens();
+  setZoom(window.innerWidth<760?0.75:1);
+  focusNode(G.players[G.turn].pos); cam.x=camT.x; cam.y=camT.y;
+  renderAll(); renderLog(); applyCam();
+  if(!G.started){
+    G.started=true;
+    await modal({title:'🚗 ドライブ開始！',html:`<div class="big-msg">${G.years}年間の日本一周ドライブに出発！</div>
+      <p>みんな<b>東京</b>からスタート。所持金は<b>1億円</b>です。<br>まずは最初の目的地を決めよう！</p>`,buttons:[{label:'ルーレットを回す',value:1,cls:'primary'}]});
+    await chooseDestination(G.players[0].pos,true);
+  }
+  gameLoop();
+}
+async function gameLoop(){
+  while(true){
+    await playTurn(G.turn);
+    if(G.quit) return;
+    G.turn++;
+    if(G.turn>=G.players.length){
+      G.turn=0;
+      const over=await endOfMonth();
+      if(over) return;
+    }
+    save();
+  }
+}
+async function endOfMonth(){
+  if(G.month===3){
+    await settlement();
+    if(G.year>=G.years){await gameOver();return true}
+    G.year++; G.month=4;
+    await toast(`🌸 ${G.year}年目のスタート！`,1500);
+  }else{
+    G.month = G.month===12?1:G.month+1;
+  }
+  renderHUD();
+  return false;
+}
+async function chooseDestination(from,first){
+  const D=distFrom(from);
+  let cands=CITY_NODES.filter(n=>n!==G.dest && D[n]>=10 && !G.players.some(p=>p.pos===n));
+  if(!cands.length) cands=CITY_NODES.filter(n=>n!==from);
+  const dest=pick(cands);
+  // ルーレット演出
+  const t0=Date.now();
+  let i=0;
+  while(Date.now()-t0<1500*Math.max(sp(),.5)){
+    $('#toast').innerHTML=`🎰 次の目的地は… <b style="color:#ffd76a">${NODES[pick(CITY_NODES)].name}</b>`;
+    $('#toast').classList.add('show');
+    await new Promise(r=>setTimeout(r,60+i*4)); i++;
+  }
+  $('#toast').classList.remove('show');
+  G.dest=dest; G.destDist=D[dest];
+  renderAll(); focusNode(dest);
+  await say(`次の目的地は <b style="color:#e8453c">${NODES[dest].name}</b> に決定！`,{title:'🏁 目的地決定',force:true});
+  focusNode(G.players[G.turn].pos);
+}
+
+async function playTurn(i){
+  const p=G.players[i];
+  renderAll(); focusNode(p.pos);
+  setActions('');
+  await toast(`${G.month}月　<span style="color:${p.color}">●</span> ${esc(p.name)} の番`,900);
+  if(G.ghost.holder===i){await ghostAct(i); renderAll(); if(G.quit)return}
+  if(p.skip>0){p.skip--;renderAll();await say(`${esc(p.name)} は今月お休み…💤`);return}
+  let act = p.human ? await humanAction(i) : await cpuAction(i);
+  if(G.quit) return;
+  if(act.warp){
+    renderAll(); focusNode(p.pos);
+    await landOn(i,p.pos);
+    return;
+  }
+  const steps = act.steps!=null ? act.steps : await rollDice(act.dice||1);
+  await moveFlow(i,steps);
+}
+
+/* 移動 */
+function computeEndpoints(start,steps){
+  const res=new Map(), seen=new Set(), stack=[[start,-1,steps,[]]];
+  while(stack.length){
+    const [n,prev,rem,path]=stack.pop();
+    if(path.length>0 && n===G.dest){if(!res.has(n))res.set(n,path);continue}
+    if(rem===0){if(!res.has(n))res.set(n,path);continue}
+    const key=n+','+prev+','+rem; if(seen.has(key))continue; seen.add(key);
+    let nb=ADJ[n].filter(m=>m!==prev); if(!nb.length)nb=ADJ[n];
+    for(const m of nb) stack.push([m,n,rem-1,[...path,m]]);
+  }
+  return res;
+}
+function nearestCityName(node){
+  if(NODES[node].type==='city') return NODES[node].name;
+  const D=distFrom(node);let best=null;
+  for(const c of CITY_NODES) if(best==null||D[c]<D[best]) best=c;
+  return NODES[best].name+'の近く';
+}
+async function moveFlow(i,steps){
+  const p=G.players[i];
+  const ends=computeEndpoints(p.pos,steps);
+  let target;
+  if(ends.size===1) target=[...ends.keys()][0];
+  else if(p.human) target=await humanPick(i,ends);
+  else {await sleep(300);target=cpuPickEnd(i,ends)}
+  await animateMove(i,ends.get(target));
+  await landOn(i,target);
+}
+function humanPick(i,ends){
+  return new Promise(resolve=>{
+    const D=distFrom(G.dest);
+    layerHL.innerHTML='';
+    const list=[...ends.keys()].sort((a,b)=>D[a]-D[b]);
+    list.forEach(n=>el('circle',{cx:NODES[n].x,cy:NODES[n].y,r:21,class:'hl'},layerHL));
+    // 全体が見えるよう少し引く
+    const xs=list.map(n=>NODES[n].x).concat(NODES[G.players[i].pos].x), ys=list.map(n=>NODES[n].y).concat(NODES[G.players[i].pos].y);
+    camT.x=(Math.min(...xs)+Math.max(...xs))/2; camT.y=(Math.min(...ys)+Math.max(...ys))/2;
+    const need=Math.max((Math.max(...xs)-Math.min(...xs)+160)/svg.clientWidth,(Math.max(...ys)-Math.min(...ys)+160)/svg.clientHeight);
+    if(1/need<camT.z) setZoom(1/need);
+    const done=n=>{pickHandler=null;layerHL.innerHTML='';setActions('');resolve(n)};
+    pickHandler=(x,y)=>{
+      let best=null,bd=30;
+      for(const n of list){const d=Math.hypot(NODES[n].x-x,NODES[n].y-y);if(d<bd){bd=d;best=n}}
+      if(best!=null) done(best);
+    };
+    const bar=setActions(`<div class="hint">止まるマスを選んでね（地図の光っているマスをタップでもOK）</div>`);
+    list.forEach(n=>{
+      const b=document.createElement('button');b.className='endbtn';
+      const t=NODES[n].type, dot={city:'🏙️',blue:'🔵',red:'🔴',yellow:'🟡',sa:'🟣'}[t];
+      b.innerHTML=`${dot} ${TYPE_NAME[t]}${t==='city'?'：'+NODES[n].name:''}<small>${n===G.dest?'🏁 目的地！':(t==='city'?'':nearestCityName(n)+'・')+'目的地まで'+D[n]}</small>`;
+      b.onmouseenter=()=>focusNode(n);
+      b.onclick=()=>done(n);
+      bar.appendChild(b);
+    });
+  });
+}
+function cpuPickEnd(i,ends){
+  const D=distFrom(G.dest);let best=null,bs=1e9;
+  for(const [n,path] of ends){
+    let s=D[n]*10; const t=NODES[n].type;
+    if(t==='red')s+=7; if(t==='blue')s-=3; if(t==='yellow')s-=4; if(t==='sa')s-=1; if(t==='city')s-=3;
+    if(n===G.dest)s-=1000;
+    if(G.ghost.holder===i && path.some(x=>G.players.some((q,j)=>j!==i&&q.pos===x))) s-=60;
+    s+=Math.random()*3;
+    if(s<bs){bs=s;best=n}
+  }
+  return best;
+}
+async function animateMove(i,path){
+  const p=G.players[i];
+  tokEls[i].querySelector('g').classList.add('bob');
+  let passed=false;
+  for(const n of path){
+    p.pos=n; renderTokens(); focusNode(n);
+    await sleep(170);
+    if(!passed && G.ghost.holder===i){
+      const j=G.players.findIndex((q,k)=>k!==i&&q.pos===n);
+      if(j>=0){passed=true;G.ghost.holder=j;renderAll();await say(`🚗💨 ${esc(p.name)} が ${esc(G.players[j].name)} を追いこした！<br>👻 ブスブスが ${esc(G.players[j].name)} に乗りうつった！`)}
+    }
+  }
+  renderAll();
+}
+
+/* マス効果 */
+async function landOn(i,node){
+  const p=G.players[i], n=NODES[node];
+  if(node===G.dest){await arrive(i);return}
+  switch(n.type){
+    case 'blue':{
+      const m=round100(rand(3,15)*100*yf()*(G.month>=7&&G.month<=8?1.5:1));
+      p.money+=m; renderHUD();
+      await say(`🔵 青マス！ ${pick(['道の駅で野菜が売れた','ドライブ動画がバズった','ガソリン代がキャッシュバック','宝くじが当たった','ご当地グルメ大会で優勝','車の中から へそくり発見'])}<br><b style="color:#2f80ed">${fmt(m)}</b> ゲット！`,{title:'🔵 青マス'});
+      break;}
+    case 'red':{
+      if(p.cards.includes('jaf')){
+        p.cards.splice(p.cards.indexOf('jaf'),1); renderHUD();
+        await say(`🔴 赤マス！…でも 🛠️ロードサービスが助けてくれた！支払いゼロ！`,{title:'🔴 赤マス'});break;
+      }
+      const winter=[12,1,2].includes(G.month)&&n.y<1100;
+      const m=round100(rand(3,14)*100*yf()*(winter?1.8:1));
+      await say(`🔴 赤マス！ ${winter?'大雪でチェーン代がかさんだ… ':pick(['スピード違反で罰金','タイヤがパンク','駐車違反の切符','車検の時期だった','高速料金が思ったより高い','カーナビが壊れた'])}<br><b style="color:#eb5757">${fmt(m)}</b> 支払い…`,{title:'🔴 赤マス'});
+      await pay(i,m);
+      break;}
+    case 'yellow':{
+      const c=wpick(YELLOW_TABLE);
+      if(p.cards.length>=HAND_MAX){await say(`🟡 黄マス！ ${CARDS[c].ic}${CARDS[c].name}カード…だけど手札がいっぱいで受け取れなかった`,{title:'🟡 黄マス'});break}
+      p.cards.push(c); renderHUD();
+      await say(`🟡 黄マス！<br>${CARDS[c].ic} <b>${CARDS[c].name}</b>カードを手に入れた！<br><small>${CARDS[c].desc}</small>`,{title:'🟡 黄マス'});
+      break;}
+    case 'sa':
+      if(p.human) await cardShop(i); else await cpuCardShop(i);
+      break;
+    case 'city':
+      if(p.human) await cityShop(i,node); else await cpuBuy(i,node);
+      break;
+  }
+}
+async function pay(i,m){
+  const p=G.players[i];
+  p.money-=m;
+  while(p.money<0){
+    const props=propsOf(i).sort((a,b)=>SHOPS[a].price-SHOPS[b].price);
+    if(!props.length) break;
+    const sid=props[0], v=Math.round(SHOPS[sid].price/2);
+    delete G.owner[sid]; p.money+=v;
+    await say(`💸 お金が足りない！ ${NODES[SHOPS[sid].city].name}の「${SHOPS[sid].name}」を ${fmt(v)} で売却…`,{title:'借金'});
+  }
+  renderAll();
+}
+async function arrive(i){
+  const p=G.players[i];
+  const prize=round100((3000+G.destDist*300)*yf());
+  p.money+=prize; renderAll();
+  log(`🏁 ${p.name} が ${NODES[G.dest].name} に一番乗り！ ${fmt(prize)}`);
+  await modal({title:'🏁 目的地到着！',html:`<div class="big-msg" style="font-size:24px">🎉 ${esc(p.name)} が<br>${NODES[G.dest].name}に一番乗り！ 🎉</div>
+    <p style="text-align:center">賞金 <b style="font-size:22px;color:#f2a516">${fmt(prize)}</b></p>`});
+  // ブスブス
+  if(G.players.length>1){
+    const D=distFrom(G.dest);let far=-1,fd=-1;
+    G.players.forEach((q,j)=>{if(j===i)return;const d=D[q.pos]+Math.random()*.5;if(d>fd){fd=d;far=j}});
+    if(far>=0){
+      const fresh=G.ghost.holder<0;
+      G.ghost.holder=far; renderAll(); focusNode(G.players[far].pos);
+      await sleep(500);
+      await say(`👻 「ブスブス〜」<br>${fresh?'ガス欠おばけ ブスブスが現れて':'ブスブスが'} 一番遠くにいる <b>${esc(G.players[far].name)}</b> に取りついた！`,{title:'👻 ブスブス',force:true});
+    }
+  }
+  const node=p.pos;
+  await chooseDestination(node);
+  focusNode(node);
+  if(p.human) await cityShop(i,node); else await cpuBuy(i,node);
+}
+
+/* 物件 */
+function shopRow(sid,i){
+  const s=SHOPS[sid], o=G.owner[sid], p=G.players[i];
+  const inc=Math.round(s.price*s.rate/100);
+  let right;
+  if(o!=null) right=`<span class="own" style="background:${G.players[o].color}">${esc(G.players[o].name)}</span>`;
+  else right=`<button class="primary" data-buy="${sid}" ${p.money<s.price?'disabled':''}>買う</button>`;
+  return `<div class="shop"><div class="n"><b>${s.name}</b><small>${fmt(s.price)}　収益率${s.rate}%（年${fmt(inc)}）</small></div>${right}</div>`;
+}
+function cityShop(i,node){
+  const n=NODES[node], p=G.players[i];
+  if(n.shops.every(s=>G.owner[s]!=null)&&monopolyOwner(node)===i){return say(`🏙️ ${n.name}。ここは ${esc(p.name)} が独占中！`,{title:n.name})}
+  return modal({title:`🏙️ ${n.name}のお店`,buttons:[{label:'おわる',value:true,cls:'primary'}],render:(body)=>{
+    const draw=()=>{
+      const mono=monopolyOwner(node);
+      body.innerHTML=`<p style="margin:0 0 6px">所持金 <b>${fmt(p.money)}</b>${mono>=0?`　<span style="color:${G.players[mono].color}">★${esc(G.players[mono].name)}が独占中</span>`:''}</p>
+        ${n.shops.map(s=>shopRow(s,i)).join('')}
+        <p style="font-size:12px;color:#888;margin-bottom:0">全部のお店を買うと独占！収益が2倍になるよ</p>`;
+      body.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{
+        const sid=+b.dataset.buy, s=SHOPS[sid];
+        if(p.money<s.price||G.owner[sid]!=null)return;
+        p.money-=s.price; G.owner[sid]=i; log(`🏪 ${p.name} が ${n.name}の${s.name}を購入`);
+        renderAll(); draw();
+        if(monopolyOwner(node)===i) toast(`★ ${n.name}を独占！ 収益2倍！`);
+      });
+    };
+    draw();
+  }});
+}
+async function cpuBuy(i,node){
+  const p=G.players[i], n=NODES[node];
+  const reserve=1500*yf();
+  const free=n.shops.filter(s=>G.owner[s]==null).sort((a,b)=>SHOPS[b].rate-SHOPS[a].rate);
+  const bought=[];
+  for(const sid of free){
+    const s=SHOPS[sid];
+    if(p.money-s.price>=reserve){p.money-=s.price;G.owner[sid]=i;bought.push(s.name)}
+  }
+  renderAll();
+  if(bought.length){
+    await say(`🏪 ${esc(p.name)} は ${n.name}で「${bought.join('」「')}」を購入！${monopolyOwner(node)===i?'<br>★ '+n.name+'を独占！':''}`);
+  }else await toast(`${esc(p.name)} は ${n.name} に到着`,800);
+}
+
+/* カード */
+async function cardShop(i){
+  const p=G.players[i];
+  const offer=[...SHOP_LIST].sort(()=>Math.random()-.5).slice(0,4);
+  const price=c=>round100(CARDS[c].price*yf());
+  return modal({title:'🟣 サービスエリアのカード売り場',buttons:[{label:'おわる',value:true,cls:'primary'}],render:(body)=>{
+    const draw=()=>{
+      body.innerHTML=`<p style="margin:0 0 6px">所持金 <b>${fmt(p.money)}</b>　手札 ${p.cards.length}/${HAND_MAX}</p>`+
+        offer.map(c=>`<div class="cardi"><div class="ic">${CARDS[c].ic}</div><div class="n"><b>${CARDS[c].name}</b><small>${CARDS[c].desc}</small></div>
+        <button class="primary" data-c="${c}" ${p.money<price(c)||p.cards.length>=HAND_MAX?'disabled':''}>${fmt(price(c))}</button></div>`).join('');
+      body.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{
+        const c=b.dataset.c; if(p.money<price(c)||p.cards.length>=HAND_MAX)return;
+        p.money-=price(c); p.cards.push(c); log(`🃏 ${p.name} が${CARDS[c].name}カードを購入`); renderHUD(); draw();
+      });
+    };
+    draw();
+  }});
+}
+async function cpuCardShop(i){
+  const p=G.players[i];
+  const offer=[...SHOP_LIST].sort(()=>Math.random()-.5).slice(0,4);
+  const want=['oharai','nitro','turbo','jaf','just','toll'];
+  const bought=[];
+  for(const c of want){
+    if(!offer.includes(c))continue;
+    if(c==='oharai'&&G.ghost.holder!==i)continue;
+    const pr=round100(CARDS[c].price*yf());
+    if(p.cards.length<6 && p.money-pr>3000*yf() && !p.cards.includes(c)){p.money-=pr;p.cards.push(c);bought.push(CARDS[c].name)}
+  }
+  renderHUD();
+  if(bought.length) await say(`🟣 ${esc(p.name)} はSAで「${bought.join('」「')}」カードを購入`);
+  else await toast(`${esc(p.name)} はSAでひと休み☕`,800);
+}
+function cardUsable(i,c){
+  if(CARDS[c].passive)return false;
+  if(c==='oharai')return G.ghost.holder===i;
+  if(c==='toll')return G.players.length>1;
+  return true;
+}
+function setActions(html){const b=$('#actions');b.innerHTML=html;return b}
+function humanAction(i){
+  const p=G.players[i];
+  return new Promise(resolve=>{
+    const draw=()=>{
+      renderHUD();
+      const bar=setActions(`<button class="primary big" id="aRoll">🎲 サイコロをふる</button>
+        <button id="aCard">🃏 カード（${p.cards.length}）</button><button id="aProp">🏪 持ち店</button>`);
+      bar.querySelector('#aRoll').onclick=()=>{setActions('');resolve({dice:1})};
+      bar.querySelector('#aCard').onclick=async()=>{
+        const r=await cardMenu(i);
+        if(r){setActions('');resolve(r)}else draw();
+      };
+      bar.querySelector('#aProp').onclick=async()=>{await showProps(i);draw()};
+    };
+    draw();
+  });
+}
+async function cardMenu(i){
+  const p=G.players[i];
+  if(!p.cards.length){await modal({title:'🃏 カード',html:'カードを持っていません'});return null}
+  const idx=await modal({title:'🃏 どのカードを使う？',buttons:[{label:'もどる',value:-1}],render:(body,close)=>{
+    body.innerHTML=p.cards.map((c,k)=>`<div class="cardi"><div class="ic">${CARDS[c].ic}</div><div class="n"><b>${CARDS[c].name}</b><small>${CARDS[c].desc}</small></div>
+      <button class="primary" data-k="${k}" ${cardUsable(i,c)?'':'disabled'}>${CARDS[c].passive?'自動':'使う'}</button></div>`).join('');
+    body.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>close(+b.dataset.k));
+  }});
+  if(idx<0)return null;
+  return await useCard(i,idx);
+}
+// 移動アクションを返す（なければ null → 引き続き行動選択）
+async function useCard(i,idx){
+  const p=G.players[i], c=p.cards[idx];
+  p.cards.splice(idx,1); renderHUD();
+  log(`🃏 ${p.name} が${CARDS[c].name}カードを使った`);
+  switch(c){
+    case 'turbo': await toast(`🔥 ${esc(p.name)}：ターボ！ サイコロ2個！`,900); return {dice:2};
+    case 'nitro': await toast(`🚀 ${esc(p.name)}：ニトロ点火！ サイコロ3個！`,900); return {dice:3};
+    case 'jet':   await toast(`✈️ ${esc(p.name)}：ジェットエンジン！ サイコロ4個！`,900); return {dice:4};
+    case 'just':{
+      let n;
+      if(p.human){n=await modal({title:'🎯 いくつ進む？',html:'<p style="text-align:center">進むマス数を選んでね</p>',buttons:[1,2,3,4,5,6].map(v=>({label:String(v),value:v,cls:'primary'}))})}
+      else {const d=distFrom(G.dest)[p.pos];n=Math.min(6,Math.max(1,d))}
+      await toast(`🎯 ぴったり ${n}マス！`,800); return {steps:n};
+    }
+    case 'warp':{
+      const to=pick(CITY_NODES.filter(n=>n!==p.pos&&n!==G.dest));
+      await toast(`🌀 ワープ！ どこへ飛ぶかな…`,900);
+      p.pos=to; renderAll(); focusNode(to);
+      await say(`🌀 ${esc(p.name)} は <b>${NODES[to].name}</b> にワープした！`);
+      return {warp:true};
+    }
+    case 'oharai':{
+      const D=distFrom(G.dest);let far=-1,fd=-1;
+      G.players.forEach((q,j)=>{if(j===i)return;if(D[q.pos]>fd){fd=D[q.pos];far=j}});
+      G.ghost.holder=far; renderAll();
+      await say(`🧂 おはらい！ ブスブスは ${far>=0?esc(G.players[far].name)+' のところへ飛んでいった！':'どこかへ消えた！'}`);
+      return null;
+    }
+    case 'toll':{
+      let t;
+      if(p.human){
+        t=await modal({title:'🚧 だれを通行止めにする？',buttons:G.players.map((q,j)=>j===i?null:{label:esc(q.name),value:j,cls:'primary'}).filter(Boolean)});
+      }else t=cpuTollTarget(i);
+      G.players[t].skip++; renderHUD();
+      await say(`🚧 ${esc(G.players[t].name)} の前の道が通行止めに！ 次の番はお休み！`);
+      return null;
+    }
+    case 'bonus':{
+      const m=round100(rand(10,40)*100*yf()); p.money+=m; renderHUD();
+      await say(`💰 臨時ボーナス！ ${fmt(m)} もらった！`); return null;
+    }
+  }
+  return null;
+}
+function cpuTollTarget(i){
+  const D=distFrom(G.dest);let best=-1,bd=1e9;
+  G.players.forEach((q,j)=>{if(j===i)return;if(D[q.pos]<bd){bd=D[q.pos];best=j}});
+  return best;
+}
+async function cpuAction(i){
+  const p=G.players[i];
+  await sleep(400);
+  const D=distFrom(G.dest), d=D[p.pos];
+  const has=c=>p.cards.indexOf(c);
+  if(has('bonus')>=0) await useCard(i,has('bonus'));
+  if(G.ghost.holder===i && has('oharai')>=0) await useCard(i,has('oharai'));
+  if(has('toll')>=0 && G.players.length>1){
+    const t=cpuTollTarget(i);
+    if(D[G.players[t].pos]<=8 && D[G.players[t].pos]<d && G.players[t].skip===0) await useCard(i,has('toll'));
+  }
+  if(d<=6 && has('just')>=0) return await useCard(i,has('just'));
+  if(d>=22 && has('warp')>=0 && Math.random()<.5) return await useCard(i,has('warp'));
+  if(d>=14){for(const c of ['jet','nitro']) if(has(c)>=0) return await useCard(i,has(c))}
+  if(d>=7 && has('turbo')>=0) return await useCard(i,has('turbo'));
+  return {dice:1};
+}
+
+/* ブスブス */
+async function ghostAct(i){
+  const p=G.players[i], g=G.ghost;
+  g.months++;
+  if(g.level===1 && g.months>=10){
+    g.level=2; renderAll();
+    await say(`👻👻 ブスブスが <b>キングブスブス</b> に進化した！ いたずらがパワーアップ！`,{force:true,title:'👻 進化'});
+  }
+  const L=g.level;
+  const act=wpick({nap:22,money:26,discard:p.cards.length?16:0,flat:12,sell:propsOf(i).length?10:0,lost:10,gas:12});
+  focusNode(p.pos);
+  switch(act){
+    case 'nap': await say(`👻 ブスブスは後部座席で昼寝している… Zzz`,{title:'👻 ブスブス'});break;
+    case 'money':{
+      const m = p.money>0 ? round100(p.money*(L>1?.4:.15)) : round100(800*yf()*L);
+      await say(`👻 「ブスブス〜」 財布を窓から投げ捨てた！<br><b style="color:#eb5757">${fmt(m)}</b> 失った…`,{title:'👻 ブスブス'});
+      await pay(i,m);break;}
+    case 'gas':{
+      const m=round100(rand(5,15)*100*yf()*L);
+      await say(`👻 ガソリンを ぜーんぶ抜かれた！ 給油代 <b style="color:#eb5757">${fmt(m)}</b>`,{title:'👻 ブスブス'});
+      await pay(i,m);break;}
+    case 'discard':{
+      const n = L>1 ? p.cards.length : 1;
+      const gone=[]; for(let k=0;k<n;k++){const idx=rand(0,p.cards.length-1);gone.push(CARDS[p.cards[idx]].name);p.cards.splice(idx,1)}
+      renderHUD();
+      await say(`👻 カードを食べちゃった！<br>「${gone.join('」「')}」がなくなった…`,{title:'👻 ブスブス'});break;}
+    case 'flat':
+      p.skip=Math.max(p.skip,1);
+      await say(`👻 タイヤに穴をあけた！ パンクして今月は動けない…`,{title:'👻 ブスブス'});break;
+    case 'sell':{
+      const props=propsOf(i), n=Math.min(L>1?2:1,props.length), sold=[];
+      for(let k=0;k<n;k++){const sid=pick(propsOf(i));const v=Math.round(SHOPS[sid].price/2);delete G.owner[sid];p.money+=v;sold.push(`${NODES[SHOPS[sid].city].name}の${SHOPS[sid].name}`)}
+      renderAll();
+      await say(`👻 勝手にお店を半額で売りとばした！<br>「${sold.join('」「')}」…`,{title:'👻 ブスブス'});break;}
+    case 'lost':{
+      const D=distFrom(G.dest);
+      const far=NODES.filter(n=>n.type!=='city'&&D[n.id]>D[p.pos]+(L>1?10:4));
+      if(!far.length){await say(`👻 カーナビをいじったけど、何も起きなかった`,{title:'👻 ブスブス'});break}
+      const to=pick(far).id;
+      await say(`👻 カーナビをめちゃくちゃにした！ 道に迷ってしまった…`,{title:'👻 ブスブス'});
+      p.pos=to; renderAll(); focusNode(to); await sleep(600);
+      break;}
+  }
+}
+
+/* 決算・終了 */
+async function settlement(){
+  const rows=G.players.map((p,i)=>{const inc=yearlyIncome(i);p.money+=inc;return {p,i,inc}});
+  renderAll();
+  log(`📊 ${G.year}年目の決算`);
+  const rank=[...G.players.keys()].sort((a,b)=>totalAssets(b)-totalAssets(a));
+  await modal({title:`📊 ${G.year}年目 決算（3月）`,html:`
+    <table class="tbl"><tr><th>プレイヤー</th><th>お店の収益</th><th>所持金</th></tr>
+    ${rows.map(r=>`<tr><td><span style="color:${r.p.color}">●</span> ${esc(r.p.name)}</td><td>+${fmt(r.inc)}</td><td>${fmt(r.p.money)}</td></tr>`).join('')}</table>
+    <h3 style="margin:16px 0 4px">総資産ランキング</h3>
+    <table class="tbl">${rank.map((j,k)=>`<tr><td>${['🥇','🥈','🥉','4位'][k]} ${esc(G.players[j].name)}</td><td>${fmt(totalAssets(j))}</td></tr>`).join('')}</table>
+    ${G.year<G.years?`<p style="color:#888;font-size:13px">のこり ${G.years-G.year}年！</p>`:''}`});
+}
+async function gameOver(){
+  clearSave();
+  const rank=[...G.players.keys()].sort((a,b)=>totalAssets(b)-totalAssets(a));
+  const w=G.players[rank[0]];
+  await modal({title:'🏆 ゲーム終了！',html:`<div class="big-msg" style="font-size:24px">優勝は <span style="color:${w.color}">${esc(w.name)}</span>！🎉</div>
+    <table class="tbl">${rank.map((j,k)=>`<tr><td>${['🥇','🥈','🥉','4位'][k]} ${esc(G.players[j].name)}</td><td>🏪${propsOf(j).length}軒</td><td>${fmt(totalAssets(j))}</td></tr>`).join('')}</table>`,
+    buttons:[{label:'タイトルへ',value:1,cls:'primary'}]});
+  toTitle();
+}
+async function showProps(i){
+  const props=propsOf(i).sort((a,b)=>SHOPS[a].city-SHOPS[b].city);
+  await modal({title:`🏪 ${esc(G.players[i].name)} のお店`,html: props.length?
+    `<table class="tbl"><tr><th>お店</th><th>価格</th><th>年収益</th></tr>${props.map(s=>{const sh=SHOPS[s],m=monopolyOwner(sh.city)===i;
+      return `<tr><td>${NODES[sh.city].name}・${sh.name}${m?' ★':''}</td><td>${fmt(sh.price)}</td><td>${fmt(sh.price*sh.rate/100*(m?2:1))}</td></tr>`}).join('')}</table>
+     <p>年間収益の見込み：<b>${fmt(yearlyIncome(i))}</b>（★は独占で2倍）</p>`:'まだお店を持っていません。都市に止まって買ってみよう！'});
+}
+async function showAllCities(){
+  await modal({title:'🗾 都市とお店のようす',html:CITY_NODES.map(c=>{const n=NODES[c];const mono=monopolyOwner(c);
+    return `<div style="padding:6px 0;border-bottom:1px solid #eee"><b>${n.name}</b>${mono>=0?` <span style="color:${G.players[mono].color}">★独占</span>`:''}<br>
+    ${n.shops.map(s=>{const o=G.owner[s];return `<span style="font-size:12px;margin-right:8px;${o!=null?'color:'+G.players[o].color+';font-weight:700':'color:#888'}">${SHOPS[s].name}(${fmt(SHOPS[s].price)})</span>`}).join('')}</div>`}).join('')});
+}
+$('#menuBtn').onclick=async()=>{
+  const v=await modal({title:'メニュー',html:'<p>ゲームは毎ターン自動でセーブされます。</p>',buttons:[
+    {label:'🗾 都市一覧',value:'cities'},{label:'⏩ CPU速度切替',value:'speed'},{label:'🏠 タイトルへ',value:'title'},{label:'とじる',value:null,cls:'primary'}]});
+  if(v==='cities') await showAllCities();
+  if(v==='speed'){G.speed=G.speed<=0.25?1:G.speed/2;await toast(`CPUスピード：${G.speed===1?'ふつう':G.speed===0.5?'はやい':'爆速'}`,900)}
+  if(v==='title'){const ok=await modal({title:'タイトルへ戻る',html:'<p>今の番の最初から再開できるようにセーブします。</p>',buttons:[{label:'キャンセル',value:false},{label:'戻る',value:true,cls:'primary'}]});
+    if(ok) location.reload();}
+};
+function toTitle(){location.reload()}
+
+/* =========================================================
+   タイトル画面
+   ========================================================= */
+(function initTitle(){
+  const box=$('#setup');
+  box.innerHTML=[0,1,2,3].map(k=>`<div class="prow"><span class="chip" style="background:${COLORS[k]}"></span>
+    <input id="pn${k}" value="${PNAMES[k]}" maxlength="10">
+    <select id="pt${k}"><option value="human" ${k===0?'selected':''}>人間</option><option value="cpu" ${k>0?'selected':''}>CPU</option>${k>0?'<option value="none">なし</option>':''}</select></div>`).join('');
+  const sv=loadSave();
+  if(sv && sv.started){$('#resumeBtn').hidden=false;$('#resumeBtn').textContent=`つづきから（${sv.year}年目 ${sv.month}月）`}
+  $('#startBtn').onclick=()=>{
+    const setup=[];
+    for(let k=0;k<4;k++){const t=$('#pt'+k).value;if(t==='none')continue;setup.push({name:$('#pn'+k).value.trim()||PNAMES[k],color:COLORS[k],human:t==='human'})}
+    newGame(setup,+$('#years').value,+$('#speed').value);
+    save(); startGame();
+  };
+  $('#resumeBtn').onclick=()=>{G=loadSave();if(!G)return;G.quit=false;startGame()};
+})();
+</script>
+</body>
+</html>
