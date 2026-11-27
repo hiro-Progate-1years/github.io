@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>ニッポン爆走ドライブ</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#263445">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="爆走ドライブ">
 <style>
 :root{
   --sea:#7cc8ec; --sea2:#5fb4e0; --land:#cfe8a6; --land2:#b5d886;
@@ -39,6 +47,14 @@ button.primary:active{transform:translateY(2px);box-shadow:0 1px 0 #c57f00}
 .rules{font-size:13px;color:var(--sub);line-height:1.7;background:#f7f7f4;border-radius:12px;padding:10px 14px;margin-top:14px}
 .rules b{color:var(--ink)}
 #title .go{width:100%;font-size:20px;padding:14px;margin-top:10px}
+#title .trow{display:flex;gap:8px}
+#title .trow .go{font-size:17px}
+#title .go small{font-size:13px;color:#b36b00}
+.psub{display:flex;gap:6px;margin:-2px 0 10px 24px;flex-wrap:wrap}
+.psub select{padding:6px 6px;border:2px solid #e2e6ea;border-radius:10px;font:inherit;font-size:13px;background:#fff;max-width:100%}
+.sitem{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #f0f0f0}
+.sitem .pv{width:64px;height:44px;flex:none;display:flex;align-items:center;justify-content:center;font-size:30px}
+.sitem .n{flex:1;min-width:0}.sitem .n small{display:block;color:var(--sub)}
 
 /* ---------- ゲーム画面 ---------- */
 #game{position:fixed;inset:0;display:flex;flex-direction:column}
@@ -222,10 +238,15 @@ button.primary:active{transform:translateY(2px);box-shadow:0 1px 0 #c57f00}
     <div id="setup"></div>
     <div class="opt"><label>プレイ年数</label>
       <select id="years"><option value="1">1年（お試し）</option><option value="3" selected>3年</option><option value="5">5年</option><option value="10">10年</option></select></div>
+    <div class="opt"><label>CPUの強さ</label>
+      <select id="cpuLv"><option value="0">ふつう</option><option value="1">つよい</option><option value="2">鬼</option></select></div>
+    <div class="opt"><label>ブスブス</label>
+      <select id="ghostLv"><option value="0">ふつう</option><option value="1">凶暴</option><option value="2">地獄</option></select></div>
     <div class="opt"><label>CPUのスピード</label>
       <select id="speed"><option value="1">ふつう</option><option value="0.5" selected>はやい</option><option value="0.25">爆速</option></select></div>
     <button class="primary go" id="startBtn">エンジン始動！</button>
     <button class="go" id="resumeBtn" hidden>つづきから</button>
+    <div class="trow"><button class="go" id="shopBtn">🛒 ショップ <small id="ptLabel"></small></button><button class="go" id="installBtn" hidden>📲 アプリにする</button></div>
     <div class="rules">
       <b>あそびかた</b><br>
       🎲 サイコロをふって日本中の道をドライブ。光ったマスから止まる場所を選べるよ。<br>
@@ -235,9 +256,10 @@ button.primary:active{transform:translateY(2px);box-shadow:0 1px 0 #c57f00}
       📦 都市で<b>配達の依頼</b>を受けて、名産品を届け先まで運ぶと報酬！<br>
       🚙 地図の<b>🚙マークの都市</b>（カーディーラー）で車を買いかえ！ ワゴン・トラックは荷物をたくさん積める、SUVは雪に強い、スポーツカーはサイコロ+1個！<br>
       🏁 目的地には<b>ぴったりの目</b>で止まらないと到着にならないよ（通りすぎはダメ）<br>
-      💗 <b>人生マス</b>で人生ルーレット！ 結婚・家族がふえる・TV取材・マイホーム…家族は車に乗って決算でボーナス！<br>
+      💗 <b>人生マス</b>で社長ルーレット！ 社長の結婚・跡継ぎ誕生・TV取材・株・豪邸…家族は車に乗って決算でボーナス！<br>
       🔵 青マス＝お金がもらえる　🔴 赤マス＝お金がへる　🟡 黄マス＝カードがもらえる　🟣 SA＝カードが買える<br>
       📰 毎月いろいろな<b>ニュース</b>が！ 渋滞・台風・大雪・原油高・ご当地フェス・豊作・新車フェア…<br>
+      🛒 遊び終わると<b>ドライブポイント</b>がもらえる！ ショップで車のラッピングやカードパック、CPUキャラ、ブスブス衣装と交換しよう<br>
       👻 目的地から一番遠い人には、ガス欠おばけ「<b>ブスブス</b>」が取りつく。ほかの車を追いこすと押しつけられる！<br>
       最後に<b>総資産</b>（お金＋お店の価値）が一番多い人の優勝！
     </div>
@@ -283,6 +305,17 @@ button.primary:active{transform:translateY(2px);box-shadow:0 1px 0 #c57f00}
     <div class="ar-tap">タップで つぎへ ▶</div>
   </div>
 </div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <pattern id="wp-stripe" width="60" height="60" patternUnits="userSpaceOnUse" x="-30" y="-30"><rect y="22" width="60" height="3.2" fill="#fff"/><rect y="26.5" width="60" height="1.6" fill="#fff"/></pattern>
+  <pattern id="wp-dots" width="6" height="6" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1.4" fill="#fff" opacity=".9"/></pattern>
+  <pattern id="wp-star" width="9" height="8" patternUnits="userSpaceOnUse"><path d="M4.5 1 L5.5 3.4 L8 3.5 L6 5 L6.8 7.4 L4.5 6 L2.2 7.4 L3 5 L1 3.5 L3.5 3.4 Z" fill="#ffe14d"/></pattern>
+  <pattern id="wp-checker" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="3" height="3" fill="#111"/><rect x="3" y="3" width="3" height="3" fill="#111"/><rect x="3" width="3" height="3" fill="#fff"/><rect y="3" width="3" height="3" fill="#fff"/></pattern>
+  <pattern id="wp-camo" width="14" height="10" patternUnits="userSpaceOnUse"><rect width="14" height="10" fill="#6b7f3a"/><path d="M1 2 q3 -2 5 1 q-2 3 -5 1Z M8 6 q4 -2 5 2 q-3 2 -5 -2Z" fill="#3f4f22"/><path d="M6 0 q3 1 2 3 q-3 0 -2 -3Z M2 7 q2 -1 3 2 q-2 1 -3 -2Z" fill="#a08a5a"/></pattern>
+  <pattern id="wp-flame" width="40" height="40" patternUnits="userSpaceOnUse" x="-20" y="-32"><path d="M0 24 q3 -8 6 -2 q2 -9 6 -1 q3 -10 7 0 q2 -7 5 1 q3 -8 6 0 q2 -6 5 2 L40 40 L0 40Z" fill="#ff7a1a"/><path d="M0 28 q3 -5 6 -1 q2 -6 6 0 q3 -6 7 1 q2 -4 5 1 q3 -5 6 1 L40 40 L0 40Z" fill="#ffd23f"/></pattern>
+  <pattern id="wp-sakura" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#ffd1e3"/><circle cx="2" cy="2" r="1.3" fill="#ff8fb8"/><circle cx="6" cy="6" r="1.3" fill="#ff8fb8"/></pattern>
+  <linearGradient id="wp-rainbow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff5a5a"/><stop offset=".2" stop-color="#ffb13b"/><stop offset=".4" stop-color="#ffe94d"/><stop offset=".6" stop-color="#5ed36b"/><stop offset=".8" stop-color="#4aa8ff"/><stop offset="1" stop-color="#9b6bff"/></linearGradient>
+  <linearGradient id="wp-gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8a5a00"/><stop offset=".35" stop-color="#ffe680"/><stop offset=".5" stop-color="#fff6c4"/><stop offset=".7" stop-color="#e0a800"/><stop offset="1" stop-color="#7a4e00"/></linearGradient>
+</defs></svg>
 <div id="fxLayer"></div>
 <div id="modal" hidden><div class="box"><h2></h2><div class="body"></div><div class="btns"></div></div></div>
 
@@ -541,9 +574,32 @@ const MEIBUTSU = {'稚内':'昆布','網走':'ホタテ','旭川':'木の家具'
  '宇和島':'じゃこ天','四万十':'栗','室戸':'海洋深層水','壱岐':'麦焼酎','対馬':'穴子','五島':'椿油','阿蘇':'あか牛','延岡':'鮎','人吉':'球磨焼酎',
  '指宿':'カツオ節','屋久島':'屋久杉','宮古島':'雪塩','石垣':'石垣牛'};
 const COLORS = ['#e8453c','#2f7fe0','#27ae60','#f39c12'];
+// ショップ（ドライブポイントで買う）
+const WRAPS={none:{name:'ノーマル',price:0},stripe:{name:'レーシングストライプ',price:150},dots:{name:'水玉',price:150},star:{name:'スター',price:200},
+  checker:{name:'チェッカーフラッグ',price:250},camo:{name:'迷彩',price:250},flame:{name:'ファイヤー',price:300},sakura:{name:'桜吹雪',price:350},rainbow:{name:'レインボー',price:400},gold:{name:'ゴールド',price:800}};
+const PACKS={none:{name:'なし',cards:[],price:0},
+  starter:{name:'スタートダッシュパック',desc:'ターボ×2・ぴったり',cards:['turbo','turbo','just'],price:300},
+  guard:{name:'あんしんパック',desc:'お守り・ロードサービス・おはらい塩',cards:['omamori','jaf','oharai'],price:400},
+  attack:{name:'イジワルパック',desc:'駐車違反・大渋滞・オイルまき',cards:['park','slow','oil'],price:500},
+  speed:{name:'スピードスターパック',desc:'ニトロ×2・ジェットエンジン',cards:['nitro','nitro','jet'],price:600},
+  rich:{name:'社長のたしなみパック',desc:'福袋・買収・給油無料パス',cards:['lucky','buyout','freegas'],price:700}};
+const CPUCHARS={normal:{name:'ふつうのCPU',price:0,line:[]},
+  gold:{name:'成金キング',desc:'高いお店ばかり買いあさる',price:400,line:['金ならあるぞ〜！','ぜんぶまとめて買ってやる！','安い店には興味がない！']},
+  gas:{name:'ガソリン女王',desc:'ガソリンスタンドに目がない',price:400,line:['給油はわたしのスタンドでどうぞ♪','ガソリンは社長の燃料よ','満タンでいきましょ！']},
+  courier:{name:'配達ハヤテ',desc:'配達の依頼をどんどん受ける',price:400,line:['お届けものでーす！','時間厳守がモットー！','荷物はまかせろ！']},
+  cardshark:{name:'カードの鬼',desc:'イジワルカードを容赦なく使う',price:500,line:['くらえっ！','カードは使ってナンボ！','覚悟しな！']}};
+const GHOSTS={default:{name:'ノーマル',ic:'👻',price:0},pumpkin:{name:'かぼちゃ',ic:'🎃',price:200},alien:{name:'宇宙人',ic:'👽',price:300},
+  robot:{name:'ロボ',ic:'🤖',price:300},oni:{name:'鬼',ic:'👹',price:300},skull:{name:'ガイコツ',ic:'💀',price:400}};
+const SHOP_CATS=[['wrap','🎨 ラッピング',WRAPS],['pack','🃏 カードパック',PACKS],['cpu','🤖 CPUキャラ',CPUCHARS],['ghost','👻 ブスブス衣装',GHOSTS]];
+const PROFILE_KEY='nippon-drive-profile';
+let PROF={points:300,owned:[],ghost:'default',games:0};
+try{const v=JSON.parse(localStorage.getItem(PROFILE_KEY)||'null');if(v)PROF=Object.assign(PROF,v)}catch(e){}
+function saveProf(){try{localStorage.setItem(PROFILE_KEY,JSON.stringify(PROF))}catch(e){}}
+const owns=(cat,k)=>k==='none'||k==='normal'||k==='default'||PROF.owned.includes(cat+':'+k);
+const ghostIc=()=>GHOSTS[(G&&G.ghostSkin)||PROF.ghost||'default'].ic;
 const PNAMES = ['あなた','CPUたろう','CPUはなこ','CPUじろう'];
 const HAND_MAX = 8;
-const SAVE_KEY = 'nippon-drive-save-v7';
+const SAVE_KEY = 'nippon-drive-save-v8';
 
 /* =========================================================
    マップ生成（固定シードで毎回同じ）
@@ -703,7 +759,7 @@ function buildMap(){
   layerHL=el('g',{},svg);
   layerTok=el('g',{},svg);
 }
-function carSVG(color,type){
+function carSVG(color,type,wrap){
   const W='#d8f1ff',K='#1d2530',st=`fill="${color}" stroke="${K}" stroke-width="1.6" stroke-linejoin="round"`;
   const wh=(x,r=4)=>`<circle cx="${x}" cy="3.5" r="${r}" fill="${K}"/><circle cx="${x}" cy="3.5" r="${r*.4}" fill="#bbb"/>`;
   let b;
@@ -716,13 +772,15 @@ function carSVG(color,type){
     case 'sports': b=`<path d="M-18 -7 L-14 -7 L-14 -4" fill="none" stroke="${K}" stroke-width="2"/><path d="M-17 3 L-17 -3 Q-16 -6 -10 -6 L-5 -10 L5 -10 L12 -5 L17 -4 Q19 -3 19 0 L19 3 Z" ${st}/><path d="M-3 -6.5 L-1 -9 L4 -9 L8.5 -6 Z" fill="${W}"/><rect x="-12" y="-2" width="24" height="1.6" fill="#fff" opacity=".7"/>`+wh(-10,3.8)+wh(11,3.8);break;
     default: b=`<path d="M-15 3 L-15 -4 Q-15 -7 -11 -7 L-7 -7 L-3 -13 L7 -13 L11 -7 L13 -7 Q16 -7 16 -3 L16 3 Z" ${st}/><path d="M-5 -7.5 L-2 -11.5 L1.5 -11.5 L1.5 -7.5 Z M3.5 -7.5 L3.5 -11.5 L6.5 -11.5 L9 -7.5 Z" fill="${W}"/>`+wh(-8)+wh(9);
   }
+  if(wrap&&wrap!=='none'){const re=new RegExp(`<(path|rect)[^>]*fill="${color}"[^>]*/>`,'g');
+    b=b.replace(re,m=>m+m.replace(`fill="${color}"`,`fill="url(#wp-${wrap})"`).replace(/stroke="[^"]*"/,'stroke="none"'))}
   return `<g class="bob"><ellipse cx="0" cy="7" rx="16" ry="3" fill="rgba(0,0,0,.25)"/>${b}</g>`;
 }
 const tokEls=[];
 function buildTokens(){
   layerTok.innerHTML=''; tokEls.length=0;
-  G.players.forEach((p,i)=>{const g=el('g',{class:'tok'},layerTok);g.innerHTML=carSVG(p.color,p.car);tokEls.push(g)});
-  ghostEl=el('text',{'font-size':26,'text-anchor':'middle',class:'tok'},layerTok); ghostEl.textContent='👻';
+  G.players.forEach((p,i)=>{const g=el('g',{class:'tok'},layerTok);g.innerHTML=carSVG(p.color,p.car,p.wrap);tokEls.push(g)});
+  ghostEl=el('text',{'font-size':26,'text-anchor':'middle',class:'tok'},layerTok); ghostEl.textContent=ghostIc();
 }
 let ghostEl;
 function tokenXY(i,node){
@@ -988,11 +1046,11 @@ function renderHUD(){
   $('#dest').innerHTML = (G.dest!=null ? `🏁 目的地 <b>${NODES[G.dest].name}</b>　${esc(p.name)}から あと${D[p.pos]}マス` : '')+(fx.length?`　<span style="color:#ffb3b3">${fx.join(' ')}</span>`:'');
   $('#players').innerHTML=G.players.map((q,i)=>`
     <div class="pc ${i===G.turn?'now':''}">
-      ${G.ghost.holder===i?`<span class="ghost" title="ブスブス">${G.ghost.level>1?'👻👻':'👻'}</span>`:''}
+      ${G.ghost.holder===i?`<span class="ghost" title="ブスブス">${G.ghost.level>1?ghostIc()+ghostIc():ghostIc()}</span>`:''}
       <div class="nm"><i style="background:${q.color}"></i>${esc(q.name)}${q.human?'':' <small style="color:#999;font-weight:400">CPU</small>'}</div>
       <div class="money ${q.money<0?'neg':''}">💴 ${fmt(q.money)}</div>
       <div class="meta">資産 ${fmt(totalAssets(i))}</div>
-      <div class="meta">${CARS[q.car].name}　⛽<span class="fuel"><i style="width:${Math.round(q.fuel/CARS[q.car].tank*100)}%;background:${q.fuel<=6?'#eb5757':'#27ae60'}"></i></span>${q.fuel}L　📦${q.jobs.length}/${CARS[q.car].cargo}　👥${(q.pax||[]).length}/${CARS[q.car].seats-1}${q.house?'　🏠':''}</div>
+      <div class="meta">${CARS[q.car].name}　⛽<span class="fuel"><i style="width:${Math.round(q.fuel/CARS[q.car].tank*100)}%;background:${q.fuel<=6?'#eb5757':'#27ae60'}"></i></span>${q.fuel}L　📦${q.jobs.length}/${CARS[q.car].cargo}　👥${(q.pax||[]).length}/${CARS[q.car].seats-1}${q.house?'　🏯':''}${q.coupon?'　🎫'+q.coupon:''}</div>
       <div class="meta meta2">🃏${q.cards.length}枚　🏪${propsOf(i).length}軒　🏁あと${D?D[q.pos]:'-'}${q.skip?'　💤休み':''}${q.slow?'　🐢'+q.slow:''}${q.freeGas!=null&&q.freeGas>=mi()?'　🎫':''}</div>
     </div>`).join('');
 }
@@ -1126,17 +1184,18 @@ document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('but
 /* =========================================================
    ゲーム進行
    ========================================================= */
-function newGame(setup,years,speed){
+function newGame(setup,years,speed,opts={}){
   const start=CITY_BY_NAME['東京'];
   G={year:1,month:4,turn:0,years,speed,
-    players:setup.map(s=>({name:s.name,color:s.color,human:s.human,pos:start,money:10000,cards:['turbo'],skip:0,car:'kei',fuel:CARS.kei.tank,jobs:[],pax:[],house:0,married:false})),
-    owner:{},pm:{},closed:{},fx:{},ghost:{holder:-1,level:1,months:0},dest:null,destDist:0,log:[],started:false};
+    players:setup.map(s=>({name:s.name,color:s.color,human:s.human,pos:start,money:10000,cards:['turbo',...((PACKS[s.pack]||PACKS.none).cards)],skip:0,wrap:s.wrap||'none',char:s.char||'normal',car:'kei',fuel:CARS.kei.tank,jobs:[],pax:[],house:0,married:false})),
+    owner:{},pm:{},closed:{},fx:{},cpuLv:opts.cpuLv||0,ghostLv:opts.ghostLv||0,ghostSkin:PROF.ghost||'default',ghost:{holder:-1,level:1,months:0},dest:null,destDist:0,log:[],started:false};
 }
 function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(G))}catch(e){}}
 function loadSave(){try{const s=localStorage.getItem(SAVE_KEY);return s?JSON.parse(s):null}catch(e){return null}}
 function clearSave(){try{localStorage.removeItem(SAVE_KEY)}catch(e){}}
 
 async function startGame(){
+  if(!G.started&&G.cpuLv===2) G.players.forEach(p=>{if(!p.human)p.cards.push('nitro','just')});
   $('#title').hidden=true; $('#game').hidden=false;
   G.pm=G.pm||{};G.closed=G.closed||{};G.fx=G.fx||{};applyPrices();
   buildMap(); buildTokens();
@@ -1221,7 +1280,7 @@ function fxShake(){const w=$('#game');w.classList.remove('fx-shake');void w.offs
 function fxFlash(color){const d=fxEl('','fx-flash');d.style.background=color;setTimeout(()=>d.remove(),650)}
 async function fxBanner(kind,icon,title,sub,ms=1700){const t=fxDur(ms);const d=fxEl(`<span class="ic">${icon}</span><div><div class="tt">${title}</div>${sub?`<div class="sub">${sub}</div>`:''}</div>`,'fx-banner fx-'+kind);d.style.animationDuration=t+'ms';await fxDone(d,t)}
 async function fxCard(c){const t=fxDur(1900);const d=fxEl(`<div class="in" style="animation-duration:${t}ms"><div class="b">?</div><div class="f"><div style="font-size:56px">${CARDS[c].ic}</div><b>${CARDS[c].name}</b><small>${CARDS[c].desc}</small></div></div>`,'fx-card');sfx('card');setTimeout(()=>{d.classList.add('open');sfx('jingle')},t*.4);await fxDone(d,t)}
-async function fxGhost(text,ms=1900){const t=fxDur(ms);sfx('ghost');const d=fxEl(`<div class="g">👻</div><div class="t">${text}</div>`,'fx-ghost');d.style.animationDuration=t+'ms';d.querySelector('.g').style.animationDuration=t+'ms';fxShake();await fxDone(d,t)}
+async function fxGhost(text,ms=1900){const t=fxDur(ms);sfx('ghost');const d=fxEl(`<div class="g">${ghostIc()}</div><div class="t">${text}</div>`,'fx-ghost');d.style.animationDuration=t+'ms';d.querySelector('.g').style.animationDuration=t+'ms';fxShake();await fxDone(d,t)}
 async function fxStamp(text,color='#e8453c',ms=1500){const t=fxDur(ms);const d=fxEl(text,'fx-stamp');d.style.color=color;d.style.borderColor=color;d.style.animationDuration=t+'ms';setTimeout(()=>{fxShake();sfx('dice')},t*.18);await fxDone(d,t)}
 const SEASON={4:'🌸 お花見ドライブ',5:'🎏 GWは渋滞に注意',6:'☔ 梅雨のドライブ',7:'🎐 夏休みスタート',8:'🎆 夏まつりの季節',9:'🎑 お月見ドライブ',10:'🍁 紅葉シーズン',11:'🍂 秋の味覚めぐり',12:'⛄ 冬タイヤの季節',1:'🎍 あけましておめでとう',2:'👹 節分',3:'📊 決算の月'};
 async function fxMonth(){const t=fxDur(1300);const d=fxEl(`<div class="m">${G.month}<small>月</small></div><div class="s">${SEASON[G.month]}</div>`,'fx-month');d.style.animationDuration=t+'ms';sfx('news');await fxDone(d,t)}
@@ -1251,59 +1310,64 @@ function roulette(segs,target,{title,human}){
 }
 // 人生イベント
 const LIFE=[
-  {k:'marry',icon:'💍',label:'結婚',color:'#ff9ccc'},{k:'promo',icon:'📺',label:'TV取材',color:'#a8e6a1'},
-  {k:'baby',icon:'👶',label:'家族がふえる',color:'#ffe08a'},{k:'broken',icon:'🔧',label:'車が故障',color:'#f4a6a6'},
-  {k:'hitch',icon:'👍',label:'ヒッチハイカー',color:'#9fdcff'},{k:'lottery',icon:'🎰',label:'宝くじ',color:'#ffc48a'},
-  {k:'house',icon:'🏠',label:'マイホーム',color:'#d3c0ea'},{k:'trip',icon:'✈️',label:'家族旅行',color:'#9ee6ef'},
+  {k:'marry',icon:'💍',label:'社長の結婚',color:'#ff9ccc'},{k:'promo',icon:'📺',label:'TV取材',color:'#a8e6a1'},
+  {k:'baby',icon:'👶',label:'跡継ぎ誕生',color:'#ffe08a'},{k:'boya',icon:'🔥',label:'ボヤ騒ぎ',color:'#f4a6a6'},
+  {k:'hitch',icon:'🤝',label:'取引先を送迎',color:'#9fdcff'},{k:'stock',icon:'💹',label:'株の売買',color:'#ffc48a'},
+  {k:'house',icon:'🏯',label:'社長の豪邸',color:'#d3c0ea'},{k:'trip',icon:'🚌',label:'社員旅行',color:'#9ee6ef'},
 ];
 async function lifeEvent(i,node){
   const p=G.players[i]; p.pax=p.pax||[];
-  await fxBanner('life','🎉','人生マス！',`${esc(p.name)} の人生ルーレット`,1300);
-  const LW=[p.married?1:2.5,1,2.2,1,1.5,1,1,1];let rr=Math.random()*LW.reduce((x,y)=>x+y),tk=0;while(rr>LW[tk]){rr-=LW[tk];tk++}
-  const k=await roulette(LIFE,tk,{title:`🎉 ${esc(p.name)} の人生ルーレット`,human:p.human});
-  const ev=LIFE[k].k, full=p.pax.length>=CARS[p.car].seats-1, T={title:'🎉 人生イベント'};
+  await fxBanner('life','🎉','社長ルーレット！',`${esc(p.name)}社長の運命やいかに`,1300);
+  const LW=[p.married?1:2.3,1.2,2,1,1.5,1.2,1,1];let rr=Math.random()*LW.reduce((x,y)=>x+y),tk=0;while(rr>LW[tk]){rr-=LW[tk];tk++}
+  const k=await roulette(LIFE,tk,{title:`🎉 ${esc(p.name)}社長のルーレット`,human:p.human});
+  const ev=LIFE[k].k, full=p.pax.length>=CARS[p.car].seats-1, T={title:'🎉 社長ルーレット'};
   const gifts=per=>{let tot=0;for(const j of rivals(i)){const q=G.players[j];const v=Math.min(per,Math.max(0,q.money));q.money-=v;tot+=v}p.money+=tot;return tot};
   switch(ev){
     case 'marry':{
-      if(p.married){const v=round100(1000*yf());p.money+=v;fxHearts();fxFloat(node,'+'+fmt(v),'#e0559a');renderAll();await say(`💐 結婚記念日！ パートナーとドライブデート♪<br>記念のご祝儀 <b>${fmt(v)}</b>`,T);break}
+      if(p.married){const v=round100(1000*yf());p.money+=v;fxHearts();fxFloat(node,'+'+fmt(v),'#e0559a');renderAll();await say(`💐 結婚記念日！ 社長夫婦で高級ディナー…のはずが、取引先からお祝いが届いた！<br><b>+${fmt(v)}</b>`,T);break}
       p.married=true; if(!full) p.pax.push('partner'); renderAll();
-      fxHearts(); await fxStamp('祝 結婚！','#e0559a');
+      fxHearts(); await fxStamp('祝 社長結婚！','#e0559a');
       const t=gifts(round100(500*yf())); renderAll();
-      await say(`💍 ${esc(p.name)} が結婚！ ${full?'車が満員なのでパートナーは電車で追いかけてくる…':'パートナーが助手席に乗った！'}<br>みんなからご祝儀 <b style="color:#e0559a">${fmt(t)}</b>`,T);break;}
+      await say(`💍 ${esc(p.name)}社長、ついに結婚！ ${full?'車が満員なので奥さま（だんなさま）は新幹線で追いかけてくる…':'パートナーが助手席に乗った！'}<br>ライバル社長たちからご祝儀 <b style="color:#e0559a">${fmt(t)}</b>`,T);break;}
     case 'baby':{
-      if(full){await say(`👶 新しい家族が…と思ったら車が満員！<br>定員の多い車に乗りかえよう（ワゴンは8人乗り）`,T);break}
+      if(full){await say(`👶 おめでたい話が…と思ったら車が満員！<br>定員の多い車に乗りかえよう（ワゴンは8人乗り）`,T);break}
       const kid=p.married; p.pax.push(kid?'kid':'pet'); renderAll(); fxHearts(['👶','🍼','💖','✨','🐶']);
-      if(kid){await fxStamp('おめでとう！','#f2a516');const t=gifts(round100(300*yf()));renderAll();await say(`👶 赤ちゃんが生まれた！ 家族がふえた！<br>みんなからお祝い <b>${fmt(t)}</b>`,T)}
-      else await say(`🐶 迷子の子犬を拾った！ 新しい家族だ！<br><small>（結婚していると赤ちゃんが生まれるよ）</small>`,T);
+      if(kid){await fxStamp('跡継ぎ誕生！','#f2a516');const t=gifts(round100(300*yf()));renderAll();await say(`👶 跡継ぎが生まれた！ これで会社も安泰だ！<br>ライバル社長たちからお祝い <b>${fmt(t)}</b>`,T)}
+      else{const v=round100(rand(3,8)*100*yf());p.money+=v;renderAll();await say(`🐶 迷い犬を拾って会社の看板犬に！ SNSで大人気 +${fmt(v)}<br><small>（結婚していると跡継ぎが生まれるよ）</small>`,T)}
       break;}
     case 'hitch':
-      if(full){await say(`👍 ヒッチハイカーがいたけど、車が満員で乗せられなかった…`,T);break}
+      if(full){await say(`🤝 取引先の社長を送ってあげたかったけど、車が満員…商談はまた今度`,T);break}
       p.pax.push('hitch'); renderAll();
-      await say(`👍 ヒッチハイカーを乗せた！<br>次の都市で降りるとき、お礼をくれるよ`,T);break;
+      await say(`🤝 取引先の社長を車で送ることに！<br>次の都市で降りるとき、<b>商談成立</b>でお礼＆<b>お店1軒を半額で買える券</b>がもらえるよ`,T);break;
     case 'promo':{
       const props=propsOf(i), sh=props.length?SHOPS[pick(props)]:null;
       const v=round100(Math.max(rand(10,25)*100*yf(), yearlyIncome(i)*.3)); p.money+=v; renderAll(); fxCoins(18); fxFloat(node,'+'+fmt(v),'#27ae60');
-      const what=sh?`${NODES[sh.city].name}の「${sh.name}」がテレビで紹介されて大行列！`:'ドライブ旅がテレビ番組で紹介されて話題に！';
+      const what=sh?`${NODES[sh.city].name}の「${sh.name}」がテレビで紹介されて大行列！`:'社長のドライブ旅がテレビ番組で紹介されて話題に！';
       await fxBanner('gold','📺','テレビ取材！',`${what} +${fmt(v)}`,2200);log(`📺 ${p.name}：${what} +${fmt(v)}`);break;}
-    case 'lottery':{
-      const big=Math.random()<.25, v=round100((big?rand(80,200):rand(2,12))*100*yf()); p.money+=v; renderAll();
-      if(big){fxCoins(40);await fxStamp('大当たり！','#f2a516');}
-      fxFloat(node,'+'+fmt(v),'#f2a516');
-      await say(`🎰 宝くじ${big?'が<b>大当たり</b>！！':'で小当たり！'}<br><b style="color:#f2a516">${fmt(v)}</b> ゲット！`,T);break;}
+    case 'stock':{
+      const up=Math.random()<.6, base=Math.max(2000*yf(),p.money*.25);
+      if(up){const v=round100(base*(.4+Math.random()*.8));p.money+=v;renderAll();fxCoins(30);fxFloat(node,'+'+fmt(v),'#f2a516');await fxStamp('株価急騰！','#27ae60');
+        await say(`💹 買っておいた株が急騰！ 売りぬけて <b style="color:#27ae60">+${fmt(v)}</b>`,T)}
+      else{const v=round100(base*(.2+Math.random()*.4));sfx('bad');fxShake();fxFloat(node,'-'+fmt(v),'#eb5757');await fxBanner('red','📉','株価暴落…',`損切りして -${fmt(v)}`);log(`📉 ${p.name}：株で損 -${fmt(v)}`);await pay(i,v)}
+      break;}
     case 'house':{
-      const cost=round100(4000*yf()*(1+p.pax.length*.2));
-      if(p.money<cost){await say(`🏠 マイホームを建てたい…でも頭金 ${fmt(cost)} が足りない！`,T);break}
-      p.money-=cost; p.house=(p.house||0)+round100(cost*1.3); renderAll(); fxHearts(['🏠','🎉','✨','🔨']);
-      await fxStamp('マイホーム！','#7b4fa8');
-      await say(`🏠 マイホームを建てた！ ${fmt(cost)} 支払い<br>資産価値 <b>${fmt(round100(cost*1.3))}</b>（総資産にふくまれる）`,T);break;}
-    case 'broken':{
-      const v=round100(rand(5,18)*100*yf()); sfx('bad'); fxShake(); fxFlash('rgba(80,80,80,.35)'); fxFloat(node,'-'+fmt(v),'#eb5757');
-      await fxBanner('red','🔧','車が故障！',`修理代 -${fmt(v)}`); log(`🔧 ${p.name} の車が故障 -${fmt(v)}`); await pay(i,v);break;}
+      const cost=round100(5000*yf()*(1+p.pax.length*.2));
+      if(p.money<cost){await say(`🏯 社長の豪邸を建てたい…でも ${fmt(cost)} が足りない！`,T);break}
+      p.money-=cost; p.house=(p.house||0)+round100(cost*1.3); renderAll(); fxHearts(['🏯','🎉','✨','🔨']);
+      await fxStamp('豪邸 完成！','#7b4fa8');
+      await say(`🏯 社長の豪邸が完成！ ${fmt(cost)} 支払い<br>資産価値 <b>${fmt(round100(cost*1.3))}</b>（総資産にふくまれる）`,T);break;}
+    case 'boya':{
+      const props=propsOf(i).filter(x=>!SHOPS[x].gas);
+      sfx('bad'); fxShake(); fxFlash('rgba(255,120,40,.4)');
+      if(props.length){const sh=SHOPS[pick(props)], v=round100(sh.price*.15+300*yf());fxFloat(node,'-'+fmt(v),'#eb5757');
+        await fxBanner('red','🔥','ボヤ騒ぎ！',`${NODES[sh.city].name}の「${sh.name}」で小火…修理代 -${fmt(v)}`,2100);log(`🔥 ${p.name}：${sh.name}でボヤ -${fmt(v)}`);await pay(i,v)}
+      else{const v=round100(rand(5,18)*100*yf());fxFloat(node,'-'+fmt(v),'#eb5757');await fxBanner('red','🔧','社用車が故障！',`修理代 -${fmt(v)}`);log(`🔧 ${p.name}：社用車が故障 -${fmt(v)}`);await pay(i,v)}
+      break;}
     case 'trip':{
-      const fam=p.pax.filter(x=>x!=='hitch').length, cost=round100((fam+1)*300*yf()), got=[];
-      for(let k=0;k<Math.min(3,fam+1)&&p.cards.length<HAND_MAX;k++){const c=wpick(YELLOW_TABLE);p.cards.push(c);got.push(CARDS[c].ic+CARDS[c].name)}
-      renderAll();
-      await say(`✈️ ${fam?`家族${fam+1}人で`:'ひとりで'}旅行に行った！ 旅費 ${fmt(cost)}<br>おみやげ：${got.join('、')||'（手札がいっぱい）'}`,T);
+      const fam=p.pax.filter(x=>x!=='hitch').length, n=Math.max(3,propsOf(i).length), cost=round100(n*150*yf()), got=[];
+      for(let k=0;k<Math.min(3,1+Math.floor(propsOf(i).length/4))&&p.cards.length<HAND_MAX;k++){const c=wpick(YELLOW_TABLE);p.cards.push(c);got.push(CARDS[c].ic+CARDS[c].name)}
+      renderAll(); fxHearts(['🚌','🎌','🍶','✨']);
+      await say(`🚌 社員${n*3}人で社員旅行！${fam?'（家族も一緒）':''} 旅費 ${fmt(cost)}<br>社員からのおみやげ：${got.join('、')||'（手札がいっぱい）'}`,T);
       await pay(i,cost);break;}
   }
 }
@@ -1314,6 +1378,7 @@ async function playTurn(i){
   renderAll(); focusNode(p.pos);
   setActions('');
   await toast(`${G.month}月　<span style="color:${p.color}">●</span> ${esc(p.name)} の番`,900);
+  if(!p.human&&CPUCHARS[p.char]&&CPUCHARS[p.char].line.length&&Math.random()<.35) await toast(`💬 ${esc(p.name)}「${pick(CPUCHARS[p.char].line)}」`,1100);
   if(G.ghost.holder===i){await ghostAct(i); renderAll(); if(G.quit)return}
   if(p.skip>0){p.skip--;renderAll();await say(`${esc(p.name)} は今月お休み…💤`);return}
   let act = p.human ? await humanAction(i) : await cpuAction(i);
@@ -1444,10 +1509,10 @@ function cpuPickEnd(i,ends){
     if(t==='red')s+=7; if(t==='life')s-=3; if(t==='blue')s-=3; if(t==='yellow')s-=4; if(t==='sa')s-=1; if(t==='city')s-=3;
     if(n===G.dest)s-=1000;
     const p=G.players[i];
-    if(path.some(x=>p.jobs.some(j=>j.to===x))) s-=45;
+    if(path.some(x=>p.jobs.some(j=>j.to===x))) s-=(p.char==='courier'?90:45);
     if(p.fuel-path.length<=5 && (t==='city'||t==='sa')) s-=25;
     if(G.ghost.holder===i && path.some(x=>G.players.some((q,j)=>j!==i&&q.pos===x))) s-=60;
-    s+=Math.random()*3;
+    s+=Math.random()*(G.cpuLv?0.6:3);
     if(s<bs){bs=s;best=n}
   }
   return best;
@@ -1475,7 +1540,7 @@ async function landOn(i,node){
   switch(n.type){
     case 'blue':{
       sfx('coin');
-      const m=round100(rand(3,15)*100*yf()*(G.month>=7&&G.month<=8?1.5:1));
+      const m=round100(rand(3,15)*100*yf()*(G.month>=7&&G.month<=8?1.5:1)*(!p.human&&G.cpuLv===2?1.3:1));
       const why=pick(['道の駅で野菜が売れた','ドライブ動画がバズった','ガソリン代がキャッシュバック','ご当地グルメ大会で優勝','車の中から へそくり発見','観光客に道案内してお礼']);
       p.money+=m; renderHUD(); log(`🔵 ${p.name}：${why} +${fmt(m)}`);
       fxCoins(m>=1000*yf()?26:14); fxFloat(node,'+'+fmt(m),'#2f80ed');
@@ -1488,7 +1553,7 @@ async function landOn(i,node){
         log(`🛠️ ${p.name}：ロードサービスで赤マスの支払いゼロ`); await fxBanner('blue','🛠️','セーフ！','ロードサービスが助けてくれた！ 支払いゼロ');break;
       }
       const winter=[12,1,2].includes(G.month)&&n.y<1300&&p.car!=='suv';
-      const m=round100(rand(2,10)*100*yf()*(winter?1.8:1)*(p.car==='camper'?.5:1));
+      const m=round100(rand(2,10)*100*yf()*(winter?1.8:1)*(p.car==='camper'?.5:1)*(!p.human&&G.cpuLv===2?.7:1));
       const why=winter?'大雪でチェーン代がかさんだ…':pick(['スピード違反で罰金','タイヤがパンク','駐車違反の切符','車検の時期だった','高速料金が思ったより高い','カーナビが壊れた']);
       log(`🔴 ${p.name}：${why} -${fmt(m)}`); fxShake(); fxFlash('rgba(235,87,87,.35)'); fxFloat(node,'-'+fmt(m),'#eb5757');
       await fxBanner('red','💸','-'+fmt(m),why);
@@ -1533,7 +1598,7 @@ function arrivalShow(i,node,prize){
     box.querySelector('.ar-city').textContent=`${n.name} に到着！`;
     box.querySelector('.ar-who').innerHTML=`<span style="color:${p.color};text-shadow:none;background:#fff;border-radius:10px;padding:0 8px">●</span> ${esc(p.name)} が一番乗り！`;
     box.querySelector('.ar-art').innerHTML=`<use href="#art-${d[1]}" x="-24" y="-26" width="48" height="48" ${d[2]?`color="${d[2]}"`:''}/>`;
-    box.querySelector('.ar-car').innerHTML=carSVG(p.color,p.car);
+    box.querySelector('.ar-car').innerHTML=carSVG(p.color,p.car,p.wrap);
     box.querySelector('.ar-sub').textContent=`名物「${MEIBUTSU[n.name]||'ごちそう'}」でお祝いだ！`;
     const pb=box.querySelector('.ar-prize b'); pb.textContent=fmt(0);
     box.hidden=false; sfx('fanfare');
@@ -1583,18 +1648,19 @@ async function arrive(i){
 }
 
 /* 物件 */
+function buyPrice(i,sid){return G.players[i].coupon?round100(SHOPS[sid].price/2):SHOPS[sid].price}
 function shopRow(sid,i){
   const s=SHOPS[sid], o=G.owner[sid], p=G.players[i];
   const inc=Math.round(s.price*s.rate/100);
   let right;
   if(o!=null) right=`<span class="own" style="background:${G.players[o].color}">${esc(G.players[o].name)}</span>`;
-  else right=`<button class="primary" data-buy="${sid}" ${p.money<s.price?'disabled':''}>買う</button>`;
+  else right=`<button class="primary" data-buy="${sid}" ${p.money<buyPrice(i,sid)?'disabled':''}>${p.coupon?'半額 '+fmt(buyPrice(i,sid)):'買う'}</button>`;
   return `<div class="shop"><div class="n"><b>${s.name}</b><small>${fmt(s.price)}　収益率${s.rate}%（年${fmt(inc)}）${s.gas?'<br>＋ライバルがここで給油した代金が入る':''}</small></div>${right}</div>`;
 }
 async function cityVisit(i,node){
   const p=G.players[i];
-  if((p.pax||[]).includes('hitch')){const n=p.pax.filter(x=>x==='hitch').length;p.pax=p.pax.filter(x=>x!=='hitch');const v=round100(n*rand(6,14)*100*yf());p.money+=v;renderAll();
-    log(`👍 ${p.name}：ヒッチハイカーからお礼 +${fmt(v)}`);fxCoins(10,node);fxFloat(node,'+'+fmt(v),'#27ae60');await fxBanner('life','👍','ありがとう！',`ヒッチハイカーが${NODES[node].name}で降りてお礼 +${fmt(v)}`)}
+  if((p.pax||[]).includes('hitch')){const n=p.pax.filter(x=>x==='hitch').length;p.pax=p.pax.filter(x=>x!=='hitch');const v=round100(n*rand(6,14)*100*yf());p.money+=v;p.coupon=(p.coupon||0)+n;renderAll();
+    log(`🤝 ${p.name}：取引先と商談成立 +${fmt(v)}・半額券ゲット`);fxCoins(10,node);fxFloat(node,'+'+fmt(v),'#27ae60');await fxBanner('life','🤝','商談成立！',`${NODES[node].name}でお礼 +${fmt(v)}　🎫お店半額券ゲット`,2000)}
   await refuel(i,node);
   if(G.players[i].human) await cityShop(i,node); else await cpuCity(i,node);
 }
@@ -1628,10 +1694,11 @@ function cityShop(i,node){
       body.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{tab=b.dataset.t;draw()});
       body.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{
         const sid=+b.dataset.buy, s=SHOPS[sid];
-        if(p.money<s.price||G.owner[sid]!=null)return;
-        p.money-=s.price; G.owner[sid]=i; sfx('buy'); log(`🏪 ${p.name} が ${n.name}の${s.name}を購入`);
+        const cost=buyPrice(i,sid);
+        if(p.money<cost||G.owner[sid]!=null)return;
+        p.money-=cost; if(p.coupon)p.coupon--; G.owner[sid]=i; sfx('buy'); log(`🏪 ${p.name} が ${n.name}の${s.name}を購入`);
         renderAll(); draw();
-        fxFloat(node,'-'+fmt(s.price),'#e8453c');
+        fxFloat(node,'-'+fmt(cost),'#e8453c');
         if(monopolyOwner(node)===i){fxCoins(30);fxStamp(n.name+' 独占！','#f2a516',1800)}
       });
       body.querySelectorAll('[data-j]').forEach(b=>b.onclick=()=>{
@@ -1653,7 +1720,7 @@ function buyCar(i,k){
 }
 async function cpuCity(i,node){
   const p=G.players[i], n=NODES[node];
-  const reserve=1500*yf();
+  const reserve=1500*yf()*[1,.7,.4][G.cpuLv||0]*(p.char==='gold'?.5:1);
   const msgs=[];
   // 車
   if(DEALERS.includes(n.name)){
@@ -1662,11 +1729,12 @@ async function cpuCity(i,node){
     if(opts.length && Math.random()<.7){const k=opts.sort((a,b)=>CARS[b].price-CARS[a].price)[0]; if(buyCar(i,k)) msgs.push(`🚙 ${CARS[k].name}に乗りかえ`)}
   }
   // お店
-  const free=n.shops.filter(s=>G.owner[s]==null).sort((a,b)=>(SHOPS[b].gas?99:SHOPS[b].rate)-(SHOPS[a].gas?99:SHOPS[a].rate));
+  const free=n.shops.filter(s=>G.owner[s]==null).sort(p.char==='gold'?((a,b)=>SHOPS[b].price-SHOPS[a].price):((a,b)=>(SHOPS[b].gas?99:SHOPS[b].rate)-(SHOPS[a].gas?99:SHOPS[a].rate)));
   const bought=[];
   for(const sid of free){
     const s=SHOPS[sid];
-    if(p.money-s.price>=reserve){p.money-=s.price;G.owner[sid]=i;bought.push(s.name)}
+    const cost=buyPrice(i,sid);
+    if(p.money-cost>=reserve){p.money-=cost;if(p.coupon)p.coupon--;G.owner[sid]=i;bought.push(s.name)}
   }
   if(bought.length){sfx('buy');if(monopolyOwner(node)===i){fxCoins(30);await fxStamp(n.name+' 独占！','#f2a516',1800)}}
   if(bought.length) msgs.push(`🏪「${bought.join('」「')}」を購入${monopolyOwner(node)===i?'（★独占！）':''}`);
@@ -1674,7 +1742,7 @@ async function cpuCity(i,node){
   const D=distFrom(G.dest);
   for(const j of makeJobs(node)){
     if(p.jobs.length>=CARS[p.car].cargo) break;
-    if(D[j.to]<=14 || Math.random()<.35){p.jobs.push(j);msgs.push(`📦 ${j.item}→${NODES[j.to].name}の配達を引き受けた`)}
+    if(D[j.to]<=14 || Math.random()<(p.char==='courier'?1:.35)){p.jobs.push(j);msgs.push(`📦 ${j.item}→${NODES[j.to].name}の配達を引き受けた`)}
   }
   renderAll();
   if(msgs.length) await say(`${esc(p.name)} @${n.name}<br>${msgs.join('<br>')}`);
@@ -1702,7 +1770,7 @@ async function cardShop(i){
 async function cpuCardShop(i){
   const p=G.players[i];
   const offer=[...SHOP_LIST].sort(()=>Math.random()-.5).slice(0,5);
-  const want=['oharai','can','nitro','turbo','jaf','just','toll'];
+  const want=p.char==='cardshark'?['park','slow','oil','check','summit','nitro','turbo','can']:['oharai','can','nitro','turbo','jaf','just','toll'];
   const bought=[];
   for(const c of want){
     if(!offer.includes(c))continue;
@@ -1885,7 +1953,7 @@ async function cpuAction(i){
   if(has('copy')>=0 && p.cards.some(x=>['jet','nitro','ghostsend','summit','buyout'].includes(x))) await use('copy');
   if(p.fuel<CARS[p.car].tank/2) await use('freegas');
   if(has('buyout')>=0 && buyoutTargets(i).length && p.money>8000*yf()) await use('buyout');
-  if(minR<=10 && minR<d){
+  if((minR<=10 && minR<d) || (p.char==='cardshark'&&rv.length)){
     if(has('park')>=0) await use('park');
     else if(has('slow')>=0) await use('slow');
     else if(has('oil')>=0) await use('oil');
@@ -1908,17 +1976,17 @@ async function ghostAct(i){
   g.months++;
   if(p.cards.includes('omamori')){p.cards.splice(p.cards.indexOf('omamori'),1);renderHUD();
     await say(`👻 ブスブスがいたずらしようとしたけど… 🔰お守りが光って追い返した！<br><small>（お守りは1枚なくなった）</small>`,{title:'👻 ブスブス'});return}
-  if(g.level===1 && g.months>=10){
+  if(g.level===1 && g.months>=[10,5,1][G.ghostLv||0]){
     g.level=2; renderAll();
     await say(`👻👻 ブスブスが <b>キングブスブス</b> に進化した！ いたずらがパワーアップ！`,{force:true,title:'👻 進化'});
   }
   const L=g.level;
-  const act=wpick({nap:22,money:p.money>0?24:0,discard:p.cards.length?14:0,flat:12,sell:propsOf(i).length?10:0,lost:10,gas:12,cargo:p.jobs.length?10:0});
+  const act=wpick({nap:[22,10,3][G.ghostLv||0],money:p.money>0?24:0,discard:p.cards.length?14:0,flat:12,sell:propsOf(i).length?10:0,lost:10,gas:12,cargo:p.jobs.length?10:0});
   focusNode(p.pos);
   switch(act){
     case 'nap': await say(`👻 ブスブスは後部座席で昼寝している… Zzz`,{title:'👻 ブスブス'});break;
     case 'money':{
-      const m = p.money>0 ? round100(p.money*(L>1?.4:.15)) : round100(800*yf()*L);
+      const m = p.money>0 ? round100(p.money*(L>1?.4:.15)*(G.ghostLv===2?1.4:1)) : round100(800*yf()*L);
       await say(`👻 「ブスブス〜」 財布を窓から投げ捨てた！<br><b style="color:#eb5757">${fmt(m)}</b> 失った…`,{title:'👻 ブスブス'});
       await pay(i,m);break;}
     case 'gas':
@@ -2054,8 +2122,14 @@ async function gameOver(){
   clearSave();
   const rank=[...G.players.keys()].sort((a,b)=>totalAssets(b)-totalAssets(a));
   const w=G.players[rank[0]];
+  // ドライブポイント
+  const hum=rank.filter(j=>G.players[j].human);
+  let pts=50;
+  if(hum.length){const best=hum[0],pl=rank.indexOf(best);pts=100+[300,180,110,70][pl]+Math.min(300,Math.floor(Math.max(0,totalAssets(best))/10000)*10)+G.years*20+(G.cpuLv||0)*80+(G.ghostLv||0)*60}
+  PROF.points+=pts; PROF.games=(PROF.games||0)+1; saveProf();
   await modal({title:'🏆 ゲーム終了！',html:`<div class="big-msg" style="font-size:24px">優勝は <span style="color:${w.color}">${esc(w.name)}</span>！🎉</div>
-    <table class="tbl">${rank.map((j,k)=>`<tr><td>${['🥇','🥈','🥉','4位'][k]} ${esc(G.players[j].name)}</td><td>🏪${propsOf(j).length}軒</td><td>${fmt(totalAssets(j))}</td></tr>`).join('')}</table>`,
+    <table class="tbl">${rank.map((j,k)=>`<tr><td>${['🥇','🥈','🥉','4位'][k]} ${esc(G.players[j].name)}</td><td>🏪${propsOf(j).length}軒</td><td>${fmt(totalAssets(j))}</td></tr>`).join('')}</table>
+    <p style="text-align:center;font-size:20px;font-weight:900;color:#f2a516;margin:14px 0 0">🎁 ドライブポイント +${pts}pt</p><p style="text-align:center;margin:0;color:#888;font-size:13px">ショップでラッピングやカードパックと交換できるよ（所持 ${PROF.points}pt）</p>`,
     buttons:[{label:'タイトルへ',value:1,cls:'primary'}]});
   toTitle();
 }
@@ -2066,7 +2140,7 @@ async function showCars(i){
   await modal({title:'🚙 車のカタログ',html:`
     <p style="margin:0 0 6px;font-size:14px">地図の <b>🚙マーク</b> がついた都市（カーディーラー）に止まると、車を買いかえられるよ。今の車は ${fmt(trade)} で下取り。</p>
     <p style="margin:0 0 10px;font-size:13px;color:#555">近いディーラー：${ds.slice(0,3).map(c=>`<b>${NODES[c].name}</b>（あと${D[c]}マス）`).join('、')}</p>
-    ${Object.keys(CARS).map(k=>{const c=CARS[k];return `<div class="job"><svg viewBox="-22 -24 44 34" style="width:54px;height:42px;flex:none;overflow:visible">${carSVG(p.color,k)}</svg>
+    ${Object.keys(CARS).map(k=>{const c=CARS[k];return `<div class="job"><svg viewBox="-22 -24 44 34" style="width:54px;height:42px;flex:none;overflow:visible">${carSVG(p.color,k,p.wrap)}</svg>
       <div class="n"><b>${c.name}${p.car===k?'（乗ってる）':''}</b><small>サイコロ${c.dice}個・タンク${c.tank}L・荷物${c.cargo}個・定員${c.seats}人${c.price?'・'+fmt(carPrice(k)):''}<br>${c.desc}</small></div></div>`}).join('')}
     ${G.fx.sale===mi()?'<p style="color:#e8453c;font-weight:700">🎉 今月は新車フェアで3割引き！</p>':''}`});
 }
@@ -2103,18 +2177,63 @@ function toTitle(){location.reload()}
 /* =========================================================
    タイトル画面
    ========================================================= */
+async function openShop(){
+  let cat='wrap';
+  await modal({title:'🛒 ドライブポイント ショップ',buttons:[{label:'とじる',value:1,cls:'primary'}],render:(body)=>{
+    const draw=()=>{
+      const [ck,lab,obj]=SHOP_CATS.find(c=>c[0]===cat);
+      body.innerHTML=`<p style="margin:0 0 8px">所持ポイント <b style="color:#f2a516;font-size:20px">${PROF.points}pt</b><br><small style="color:#888">ゲームを最後まで遊ぶとポイントがもらえるよ（上位・高難易度ほど多い）</small></p>
+      <div class="tabs">${SHOP_CATS.map(c=>`<button data-c="${c[0]}" class="${c[0]===cat?'on':''}">${c[1]}</button>`).join('')}</div>`+
+      Object.keys(obj).filter(k=>obj[k].price>0).map(k=>{const it=obj[k], own=owns(ck,k), eq=ck==='ghost'&&PROF.ghost===k;
+        const pv=ck==='wrap'?`<svg viewBox="-22 -24 44 34" style="width:60px;height:44px;overflow:visible">${carSVG('#e8453c','kei',k)}</svg>`:ck==='ghost'?it.ic:ck==='pack'?'🃏':'🤖';
+        const desc=ck==='pack'?it.desc:ck==='cpu'?it.desc+'<br>「'+it.line[0]+'」':ck==='wrap'?'スタート画面で車に貼れるよ':'ブスブスの見た目が変わる';
+        const btn=own?(ck==='ghost'?`<button ${eq?'disabled':''} data-eq="${k}">${eq?'装備中':'装備する'}</button>`:'<button disabled>持ってる</button>'):`<button class="primary" data-buy="${k}" ${PROF.points<it.price?'disabled':''}>${it.price}pt</button>`;
+        return `<div class="sitem"><div class="pv">${pv}</div><div class="n"><b>${it.name}</b><small>${desc}</small></div>${btn}</div>`}).join('')+
+      (ck==='ghost'&&PROF.ghost!=='default'?`<p><button data-eq="default">ノーマルのブスブスに戻す</button></p>`:'');
+      body.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{cat=b.dataset.c;draw()});
+      body.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{const k=b.dataset.buy,it=obj[k];if(PROF.points<it.price)return;
+        PROF.points-=it.price;PROF.owned.push(ck+':'+k);if(ck==='ghost')PROF.ghost=k;saveProf();try{audioInit();sfx('buy')}catch(e){}draw()});
+      body.querySelectorAll('[data-eq]').forEach(b=>b.onclick=()=>{PROF.ghost=b.dataset.eq;saveProf();draw()});
+    };
+    draw();
+  }});
+}
+// アプリ化（ホーム画面に追加・オフライン）
+const IS_WEBAPP_HOST=/^https?:$/.test(location.protocol)&&!/claude|localhost-artifact/.test(location.hostname);
+(function pwa(){
+  try{if('serviceWorker' in navigator&&IS_WEBAPP_HOST) navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}
+  const btn=$('#installBtn'); let dp=null;
+  const standalone=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone;
+  if(standalone) return;
+  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;btn.hidden=false});
+  if(/iphone|ipad|ipod/i.test(navigator.userAgent)&&IS_WEBAPP_HOST) btn.hidden=false;
+  btn.onclick=async()=>{
+    if(dp){dp.prompt();try{await dp.userChoice}catch(e){}dp=null;btn.hidden=true;return}
+    modal({title:'📲 アプリにする',html:'<p>Safari の <b>共有ボタン（□に↑）</b> をタップして <b>「ホーム画面に追加」</b> を選ぶと、アプリみたいに全画面で遊べるよ。電波がなくても遊べます。</p>'});
+  };
+})();
 (function initTitle(){
   const box=$('#setup');
   box.innerHTML=[0,1,2,3].map(k=>`<div class="prow"><span class="chip" style="background:${COLORS[k]}"></span>
     <input id="pn${k}" value="${PNAMES[k]}" maxlength="10">
-    <select id="pt${k}"><option value="human" ${k===0?'selected':''}>人間</option><option value="cpu" ${k>0?'selected':''}>CPU</option>${k>0?'<option value="none">なし</option>':''}</select></div>`).join('');
+    <select id="pt${k}"><option value="human" ${k===0?'selected':''}>人間</option><option value="cpu" ${k>0?'selected':''}>CPU</option>${k>0?'<option value="none">なし</option>':''}</select></div><div class="psub" id="ps${k}"></div>`).join('');
+  const subs=(only)=>{for(let k=0;k<4;k++){if(only!=null&&k!==only)continue;const t=$('#pt'+k).value, el2=$('#ps'+k);
+    const prev={};el2.querySelectorAll('select').forEach(x=>prev[x.id]=x.value);
+    const opt=(cat,obj,id,lab)=>`<select id="${id}${k}" title="${lab}">${Object.keys(obj).filter(x=>owns(cat,x)).map(x=>`<option value="${x}">${lab}：${obj[x].name}</option>`).join('')}</select>`;
+    el2.innerHTML=t==='human'?opt('wrap',WRAPS,'pw','ラッピング')+opt('pack',PACKS,'pp','持ち込み'):t==='cpu'?opt('cpu',CPUCHARS,'pc','キャラ')+opt('wrap',WRAPS,'pw','ラッピング'):'';
+    el2.querySelectorAll('select').forEach(x=>{if(prev[x.id]&&[...x.options].some(o=>o.value===prev[x.id]))x.value=prev[x.id]})}};
+  for(let k=0;k<4;k++) $('#pt'+k).onchange=()=>subs(k);
+  subs();
+  const ptl=()=>{$('#ptLabel').textContent=`（${PROF.points}pt）`};ptl();
+  $('#shopBtn').onclick=async()=>{await openShop();ptl();subs()};
   const sv=loadSave();
   if(sv && sv.started){$('#resumeBtn').hidden=false;$('#resumeBtn').textContent=`つづきから（${sv.year}年目 ${sv.month}月）`}
   $('#startBtn').onclick=()=>{
     audioInit();sfx('engine');bgmStart();
     const setup=[];
-    for(let k=0;k<4;k++){const t=$('#pt'+k).value;if(t==='none')continue;setup.push({name:$('#pn'+k).value.trim()||PNAMES[k],color:COLORS[k],human:t==='human'})}
-    newGame(setup,+$('#years').value,+$('#speed').value);
+    for(let k=0;k<4;k++){const t=$('#pt'+k).value;if(t==='none')continue;const v=id=>{const e=$('#'+id+k);return e?e.value:undefined};
+      setup.push({name:$('#pn'+k).value.trim()||PNAMES[k],color:COLORS[k],human:t==='human',wrap:v('pw'),pack:t==='human'?v('pp'):undefined,char:t==='cpu'?v('pc'):undefined})}
+    newGame(setup,+$('#years').value,+$('#speed').value,{cpuLv:+$('#cpuLv').value,ghostLv:+$('#ghostLv').value});
     save(); startGame();
   };
   $('#resumeBtn').onclick=()=>{audioInit();sfx('engine');bgmStart();G=loadSave();if(!G)return;G.quit=false;startGame()};
