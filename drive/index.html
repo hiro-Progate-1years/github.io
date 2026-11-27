@@ -63,6 +63,7 @@ button.primary:active{transform:translateY(2px);box-shadow:0 1px 0 #c57f00}
 .pc .meta{color:var(--sub)}
 .fuel{display:inline-block;width:44px;height:7px;background:#e6e6e6;border-radius:4px;overflow:hidden;vertical-align:middle;margin:0 3px}
 .fuel i{display:block;height:100%}
+@keyframes barGrow{from{width:0}}
 .tabs{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
 .tabs button{padding:7px 12px;font-size:14px}
 .tabs button.on{background:#263445;color:#fff}
@@ -123,6 +124,56 @@ button.primary:active{transform:translateY(2px);box-shadow:0 1px 0 #c57f00}
 @keyframes ar-drive{0%{transform:translateX(-90vw)}80%{transform:translateX(6%)}100%{transform:none}}
 @keyframes ar-blink{50%{opacity:1}}
 @media (prefers-reduced-motion:reduce){.ar-rays,.ar-goal,.ar-city,.ar-art,.ar-car,.ar-who,.ar-prize,.ar-sub{animation:none}.ar-tap{opacity:1;animation:none}}
+#fxLayer{position:fixed;inset:0;pointer-events:none;z-index:15;overflow:hidden}
+.fx-banner{position:absolute;left:0;right:0;top:40%;display:flex;align-items:center;justify-content:center;gap:16px;padding:16px;color:#fff;font-weight:900;box-shadow:0 10px 30px rgba(0,0,0,.25);animation:fxBan 1.7s ease both;border-top:4px solid rgba(255,255,255,.6);border-bottom:4px solid rgba(255,255,255,.6)}
+.fx-banner .ic{font-size:clamp(40px,11vw,64px);animation:fxBounce .7s .15s both}
+.fx-banner .tt{font-size:clamp(28px,8vw,48px);line-height:1.1;text-shadow:0 3px 0 rgba(0,0,0,.25)}
+.fx-banner .sub{font-size:clamp(13px,3.8vw,19px);font-weight:800;margin-top:2px}
+.fx-blue{background:linear-gradient(90deg,#1559b8,#3aa0ff 50%,#1559b8)}
+.fx-red{background:linear-gradient(90deg,#9e1d22,#ef4b4f 50%,#9e1d22)}
+.fx-gold{background:linear-gradient(90deg,#c98a00,#ffd23f 50%,#c98a00);color:#4a3200}.fx-gold .tt{text-shadow:0 2px 0 rgba(255,255,255,.5)}
+.fx-life{background:linear-gradient(90deg,#c43d84,#ff8cc0 50%,#c43d84)}
+.fx-purple{background:linear-gradient(90deg,#4b2a7a,#8e5ad6 50%,#4b2a7a)}
+@keyframes fxBan{0%{transform:translateX(110%) skewX(-14deg)}14%{transform:translateX(-3%) skewX(0)}20%{transform:none}84%{transform:none}100%{transform:translateX(-110%) skewX(-14deg)}}
+@keyframes fxBounce{0%{transform:scale(0) rotate(-30deg)}60%{transform:scale(1.3) rotate(10deg)}100%{transform:none}}
+.fx-coin{position:absolute;width:24px;height:24px;margin:-12px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff6a8,#f2c230 55%,#c98a00);border:2px solid #a26b00;box-shadow:inset 0 0 0 3px rgba(255,255,255,.35);animation:fxCoin 1.4s ease-in both}
+@keyframes fxCoin{0%{transform:translate(0,0) rotateY(0);opacity:0}10%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotateY(900deg);opacity:1}}
+@keyframes fxBurst{0%{transform:translate(0,0) scale(.3);opacity:0}15%{opacity:1}60%{transform:translate(var(--dx),var(--dy)) scale(1)}100%{transform:translate(var(--dx),calc(var(--dy) + 80px)) scale(.8);opacity:0}}
+.fx-float{position:absolute;transform:translate(-50%,-50%);font-weight:900;font-size:24px;white-space:nowrap;-webkit-text-stroke:4px #fff;paint-order:stroke fill;animation:fxUp 1.6s ease-out both}
+@keyframes fxUp{0%{transform:translate(-50%,-30%) scale(.5);opacity:0}15%{transform:translate(-50%,-60%) scale(1.2);opacity:1}100%{transform:translate(-50%,-260%) scale(1);opacity:0}}
+.fx-flash{position:absolute;inset:0;animation:fxFlash .6s both}
+@keyframes fxFlash{0%{opacity:1}100%{opacity:0}}
+.fx-shake{animation:fxShake .5s}
+@keyframes fxShake{15%{transform:translate(-10px,5px)}30%{transform:translate(9px,-6px)}45%{transform:translate(-7px,4px)}60%{transform:translate(6px,-3px)}75%{transform:translate(-3px,2px)}}
+.fx-card{position:absolute;left:50%;top:44%;width:170px;height:230px;margin:-115px 0 0 -85px;perspective:900px}
+.fx-card .in{width:100%;height:100%;position:relative;animation:fxFlip 1.9s both}
+.fx-card .f,.fx-card .b{position:absolute;inset:0;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:5px solid #fff;box-shadow:0 12px 34px rgba(0,0,0,.4);padding:10px;text-align:center}
+.fx-card .b{background:repeating-linear-gradient(45deg,#f2a516 0 12px,#ffbf3c 12px 24px);font-size:80px;color:#fff;font-weight:900}
+.fx-card .f{background:linear-gradient(#fffdf3,#ffeec2);color:#263445;visibility:hidden}
+.fx-card.open .f{visibility:visible}.fx-card.open .b{visibility:hidden}
+.fx-card .f b{font-size:20px}.fx-card .f small{font-size:12px;color:#5b6875}
+@keyframes fxFlip{0%{transform:translateY(70vh) rotate(-20deg) scale(.4)}25%{transform:translateY(0) scaleX(1)}40%{transform:scaleX(0) scaleY(1.08)}55%{transform:scaleX(1.12) scaleY(1.12)}62%{transform:scale(1)}88%{transform:scale(1);opacity:1}100%{transform:translateY(-30px) scale(.7);opacity:0}}
+.fx-ghost{position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,rgba(90,40,140,.2) 0,rgba(40,10,70,.85) 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;animation:fxFade 1.9s both}
+.fx-ghost .g{font-size:clamp(90px,26vw,170px);animation:fxSway 1.9s ease-in-out both;filter:drop-shadow(0 0 30px #c9a0ff)}
+.fx-ghost .t{color:#fff;font-weight:900;font-size:clamp(20px,6vw,32px);text-shadow:0 0 12px #b57bff;margin-top:6px;text-align:center;padding:0 16px}
+@keyframes fxFade{0%{opacity:0}12%{opacity:1}85%{opacity:1}100%{opacity:0}}
+@keyframes fxSway{0%{transform:translate(-60vw,10vh) scale(.4) rotate(-20deg)}35%{transform:translate(0,0) scale(1.1) rotate(8deg)}50%{transform:scale(1) rotate(-6deg)}65%{transform:rotate(6deg)}100%{transform:translate(60vw,-10vh) scale(.6) rotate(20deg)}}
+.fx-stamp{position:absolute;left:50%;top:42%;font-size:clamp(48px,14vw,96px);font-weight:900;border:8px solid;border-radius:20px;padding:4px 24px;background:rgba(255,255,255,.92);white-space:nowrap;animation:fxStampA 1.5s both;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+@keyframes fxStampA{0%{transform:translate(-50%,-50%) rotate(-14deg) scale(3.5);opacity:0}18%{transform:translate(-50%,-50%) rotate(-10deg) scale(.92);opacity:1}26%{transform:translate(-50%,-50%) rotate(-10deg) scale(1)}86%{opacity:1}100%{transform:translate(-50%,-50%) rotate(-10deg) scale(1.05);opacity:0}}
+.fx-month{position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);text-align:center;animation:fxMonthA 1.3s both}
+.fx-month .m{display:inline-block;background:#fff;border-radius:18px;border-top:26px solid #e8453c;padding:4px 30px 8px;font-size:clamp(60px,18vw,100px);font-weight:900;color:#263445;box-shadow:0 12px 30px rgba(0,0,0,.35);line-height:1}
+.fx-month .m small{font-size:.4em}
+.fx-month .s{margin-top:8px;font-weight:900;font-size:20px;color:#fff;-webkit-text-stroke:4px #263445;paint-order:stroke fill}
+@keyframes fxMonthA{0%{transform:translate(-50%,-50%) rotateX(90deg);opacity:0}20%{transform:translate(-50%,-50%) rotateX(0);opacity:1}80%{opacity:1;transform:translate(-50%,-50%)}100%{transform:translate(-50%,-80%);opacity:0}}
+.fx-heart{position:absolute;bottom:-40px;font-size:34px;animation:fxRise 2.4s ease-out both}
+@keyframes fxRise{0%{transform:translateY(0) scale(.6);opacity:0}15%{opacity:1}100%{transform:translateY(-90vh) scale(1.3) rotate(30deg);opacity:0}}
+.fx-wheel{position:absolute;inset:0;background:rgba(15,20,35,.72);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;animation:fxFade2 .3s both}
+@keyframes fxFade2{from{opacity:0}}
+.fx-wheel .wt{color:#fff;font-weight:900;font-size:clamp(22px,6vw,32px);text-shadow:0 3px 0 rgba(0,0,0,.4)}
+.fx-wheel .wwrap{width:min(78vw,340px);height:min(78vw,340px);filter:drop-shadow(0 12px 24px rgba(0,0,0,.45))}
+.fx-wheel svg{width:100%;height:100%;overflow:visible}
+.fx-wheel .wb{min-height:64px;display:flex;align-items:center}
+.fx-wheel .wr{color:#fff59d;font-weight:900;font-size:clamp(26px,7vw,40px);-webkit-text-stroke:5px #263445;paint-order:stroke fill;animation:ar-pop .4s both}
 #modal{position:fixed;inset:0;background:rgba(10,15,25,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
 #modal .box{background:#fff;border-radius:18px;max-width:560px;width:100%;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 50px rgba(0,0,0,.35);animation:pop .18s ease-out}
 @keyframes pop{from{transform:scale(.9);opacity:0}}
@@ -184,6 +235,7 @@ button.primary:active{transform:translateY(2px);box-shadow:0 1px 0 #c57f00}
       📦 都市で<b>配達の依頼</b>を受けて、名産品を届け先まで運ぶと報酬！<br>
       🚙 地図の<b>🚙マークの都市</b>（カーディーラー）で車を買いかえ！ ワゴン・トラックは荷物をたくさん積める、SUVは雪に強い、スポーツカーはサイコロ+1個！<br>
       🏁 目的地には<b>ぴったりの目</b>で止まらないと到着にならないよ（通りすぎはダメ）<br>
+      💗 <b>人生マス</b>で人生ルーレット！ 結婚・家族がふえる・マイホーム…家族は車に乗って決算でボーナス！<br>
       🔵 青マス＝お金がもらえる　🔴 赤マス＝お金がへる　🟡 黄マス＝カードがもらえる　🟣 SA＝カードが買える<br>
       📰 毎月いろいろな<b>ニュース</b>が！ 渋滞・台風・大雪・原油高・ご当地フェス・豊作・新車フェア…<br>
       👻 目的地から一番遠い人には、ガス欠おばけ「<b>ブスブス</b>」が取りつく。ほかの車を追いこすと押しつけられる！<br>
@@ -231,6 +283,7 @@ button.primary:active{transform:translateY(2px);box-shadow:0 1px 0 #c57f00}
     <div class="ar-tap">タップで つぎへ ▶</div>
   </div>
 </div>
+<div id="fxLayer"></div>
 <div id="modal" hidden><div class="box"><h2></h2><div class="body"></div><div class="btns"></div></div></div>
 
 <script>
@@ -429,12 +482,12 @@ const YELLOW_TABLE = {turbo:26,nitro:11,jet:3,rocket:1,just:11,warp:7,can:13,oha
 const SHOP_LIST = ['turbo','nitro','just','warp','can','oharai','toll','jaf','slow','park','check','summit','scatter','oil','buyout','copy','lucky','freegas','ghostsend','omamori'];
 // 車：dice=基本のサイコロ数, tank=タンク(L), cargo=積める荷物の数
 const CARS = {
-  kei:   {name:'軽自動車',dice:1,tank:18,cargo:1,price:0,desc:'最初の相棒。小さくて身軽'},
-  wagon: {name:'ワゴン',dice:1,tank:26,cargo:3,price:6000,desc:'荷物を3つ積める。配達でかせぐならコレ'},
-  suv:   {name:'SUV',dice:1,tank:26,cargo:2,price:9000,desc:'雪道に強い：冬の赤マスが割増にならず、ブスブスのパンクも効かない'},
-  camper:{name:'キャンピングカー',dice:1,tank:30,cargo:2,price:18000,desc:'車中泊で節約：赤マスの支払いが半分'},
-  truck: {name:'トラック',dice:1,tank:36,cargo:5,price:16000,desc:'配達のプロ：荷物5つ・配達報酬1.5倍'},
-  sports:{name:'スポーツカー',dice:2,tank:20,cargo:1,price:35000,desc:'サイコロ+1個（いつも2個ふれる）！ ただしタンクが小さい'},
+  kei:   {name:'軽自動車',dice:1,tank:18,cargo:1,seats:4,price:0,desc:'最初の相棒。小さくて身軽'},
+  wagon: {name:'ワゴン',dice:1,tank:26,cargo:3,seats:8,price:6000,desc:'荷物を3つ積める。配達でかせぐならコレ'},
+  suv:   {name:'SUV',dice:1,tank:26,cargo:2,seats:5,price:9000,desc:'雪道に強い：冬の赤マスが割増にならず、ブスブスのパンクも効かない'},
+  camper:{name:'キャンピングカー',dice:1,tank:30,cargo:2,seats:6,price:18000,desc:'車中泊で節約：赤マスの支払いが半分'},
+  truck: {name:'トラック',dice:1,tank:36,cargo:5,seats:3,price:16000,desc:'配達のプロ：荷物5つ・配達報酬1.5倍'},
+  sports:{name:'スポーツカー',dice:2,tank:20,cargo:1,seats:2,price:35000,desc:'サイコロ+1個（いつも2個ふれる）！ ただしタンクが小さい'},
 };
 const DEALERS = ['札幌','仙台','郡山','東京','名古屋','大阪','広島','福岡','鹿児島','那覇'];
 const FUEL_PRICE = 25;   // 1Lあたり(万円) ×年数補正
@@ -490,7 +543,7 @@ const MEIBUTSU = {'稚内':'昆布','網走':'ホタテ','旭川':'木の家具'
 const COLORS = ['#e8453c','#2f7fe0','#27ae60','#f39c12'];
 const PNAMES = ['あなた','CPUたろう','CPUはなこ','CPUじろう'];
 const HAND_MAX = 8;
-const SAVE_KEY = 'nippon-drive-save-v5';
+const SAVE_KEY = 'nippon-drive-save-v6';
 
 /* =========================================================
    マップ生成（固定シードで毎回同じ）
@@ -525,7 +578,7 @@ ROADS.forEach(([an,bn,kind,wps])=>{
     while(j<seg.length-1&&t>seg[j]){t-=seg[j];j++}
     const f=Math.min(1,t/seg[j]), x=pts[j][0]+(pts[j+1][0]-pts[j][0])*f, y=pts[j][1]+(pts[j+1][1]-pts[j][1])*f;
     const r=mrnd();
-    const type = r<.42?'blue':r<.72?'red':r<.88?'yellow':'sa';
+    const type = r<.37?'blue':r<.63?'red':r<.77?'yellow':r<.89?'life':'sa';
     const id=addNode({x,y,type,edge:EDGES.length-1}); EDGES[EDGES.length-1].nodes.push(id);
     link(prev,id); prev=id;
   }
@@ -554,7 +607,7 @@ const REGIONS={
 const SNOW_CITIES=[...REGIONS['北海道'],...REGIONS['東北'],'新潟','上越','長野','松本','富山','金沢','福井','高山','佐渡','輪島','軽井沢','日光','会津若松'];
 const FARM_RE=/園|農|畑|牧場|漁|養殖|ぶどう|りんご|梨|みかん|ゆず|さくらんぼ|茶|ワイナリー|酒蔵/;
 const LAND=COAST.split('|').map(r=>r.split(' ').map(p=>p.split(',').map(Number)));
-const TYPE_NAME={city:'都市',blue:'青マス',red:'赤マス',yellow:'黄マス',sa:'SA'};
+const TYPE_NAME={city:'都市',blue:'青マス',red:'赤マス',yellow:'黄マス',sa:'SA',life:'人生マス'};
 
 const distCache={};
 function distFrom(t){
@@ -614,7 +667,7 @@ function buildMap(){
   });
   // マス
   const sq=el('g',{},svg);
-  const col={blue:'#2f80ed',red:'#eb5757',yellow:'#f2c94c',sa:'#9b51e0'};
+  const col={blue:'#2f80ed',red:'#eb5757',yellow:'#f2c94c',sa:'#9b51e0',life:'#ff6fae'};
   NODES.forEach(n=>{
     if(n.type==='city'){
       el('rect',{x:n.x-17,y:n.y-12,width:34,height:24,rx:6,fill:'#fff',stroke:'#263445','stroke-width':3},sq);
@@ -622,6 +675,7 @@ function buildMap(){
     }else{
       el('circle',{cx:n.x,cy:n.y,r:11,fill:col[n.type],stroke:'#fff','stroke-width':3},sq);
       if(n.type==='sa'){const t=el('text',{x:n.x,y:n.y+3.5,'text-anchor':'middle',class:'sqtext'},sq);t.textContent='SA'}
+      if(n.type==='life'){const t=el('text',{x:n.x,y:n.y+4,'text-anchor':'middle',class:'sqtext',style:'font-size:11px'},sq);t.textContent='♥'}
       if(n.type==='yellow'){const t=el('text',{x:n.x,y:n.y+3.5,'text-anchor':'middle',class:'sqtext',style:'fill:#7a5a00'},sq);t.textContent='?'}
     }
   });
@@ -676,10 +730,13 @@ function tokenXY(i,node){
   const off = cnt>1 ? (k-(cnt-1)/2)*14 : 0;
   return [n.x+off, n.y-12-(cnt>1?k*3:0)];
 }
+const PAXC={partner:'#ff7eb6',kid:'#ffd166',pet:'#c68a4f',hitch:'#8be08b'};
 function renderTokens(){
   G.players.forEach((p,i)=>{
     const [x,y]=tokenXY(i,p.pos);
     tokEls[i].setAttribute('transform',`translate(${x},${y})`);
+    let pg=tokEls[i].querySelector('.pax'); if(!pg) pg=el('g',{class:'pax'},tokEls[i]);
+    const px=(p.pax||[]).slice(0,7); pg.innerHTML=px.map((t,k)=>`<g transform="translate(${-((px.length-1)*5)/2+k*5},-19)"><rect x="-1.8" y="-1" width="3.6" height="5" rx="1.6" fill="${PAXC[t]}" stroke="#4a3b33" stroke-width=".8"/><circle cx="0" cy="-2.6" r="2.2" fill="${PAXC[t]}" stroke="#4a3b33" stroke-width=".8"/></g>`).join('');
     if(i===G.turn) layerTok.appendChild(tokEls[i]);
   });
   if(G.ghost.holder>=0){
@@ -915,7 +972,7 @@ async function toast(msg,ms=1300){
   t.classList.remove('show');
   await sleep(150);
 }
-function totalAssets(i){const p=G.players[i];let s=p.money+Math.round(CARS[p.car].price/2);for(const sid in G.owner)if(G.owner[sid]===i)s+=SHOPS[sid].price;return s}
+function totalAssets(i){const p=G.players[i];let s=p.money+Math.round(CARS[p.car].price/2)+(p.house||0);for(const sid in G.owner)if(G.owner[sid]===i)s+=SHOPS[sid].price;return s}
 function propsOf(i){return Object.keys(G.owner).filter(s=>G.owner[s]===i).map(Number)}
 function monopolyOwner(c){const s=NODES[c].shops;const o=G.owner[s[0]];if(o==null)return -1;return s.every(x=>G.owner[x]===o)?o:-1}
 function yearlyIncome(i){
@@ -933,7 +990,7 @@ function renderHUD(){
       <div class="nm"><i style="background:${q.color}"></i>${esc(q.name)}${q.human?'':' <small style="color:#999;font-weight:400">CPU</small>'}</div>
       <div class="money ${q.money<0?'neg':''}">💴 ${fmt(q.money)}</div>
       <div class="meta">資産 ${fmt(totalAssets(i))}</div>
-      <div class="meta">${CARS[q.car].name}　⛽<span class="fuel"><i style="width:${Math.round(q.fuel/CARS[q.car].tank*100)}%;background:${q.fuel<=6?'#eb5757':'#27ae60'}"></i></span>${q.fuel}L　📦${q.jobs.length}/${CARS[q.car].cargo}</div>
+      <div class="meta">${CARS[q.car].name}　⛽<span class="fuel"><i style="width:${Math.round(q.fuel/CARS[q.car].tank*100)}%;background:${q.fuel<=6?'#eb5757':'#27ae60'}"></i></span>${q.fuel}L　📦${q.jobs.length}/${CARS[q.car].cargo}　👥${(q.pax||[]).length}/${CARS[q.car].seats-1}${q.house?'　🏠':''}</div>
       <div class="meta meta2">🃏${q.cards.length}枚　🏪${propsOf(i).length}軒　🏁あと${D?D[q.pos]:'-'}${q.skip?'　💤休み':''}${q.slow?'　🐢'+q.slow:''}${q.freeGas!=null&&q.freeGas>=mi()?'　🎫':''}</div>
     </div>`).join('');
 }
@@ -1070,7 +1127,7 @@ document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('but
 function newGame(setup,years,speed){
   const start=CITY_BY_NAME['東京'];
   G={year:1,month:4,turn:0,years,speed,
-    players:setup.map(s=>({name:s.name,color:s.color,human:s.human,pos:start,money:10000,cards:['turbo'],skip:0,car:'kei',fuel:CARS.kei.tank,jobs:[]})),
+    players:setup.map(s=>({name:s.name,color:s.color,human:s.human,pos:start,money:10000,cards:['turbo'],skip:0,car:'kei',fuel:CARS.kei.tank,jobs:[],pax:[],house:0,married:false})),
     owner:{},pm:{},closed:{},fx:{},ghost:{holder:-1,level:1,months:0},dest:null,destDist:0,log:[],started:false};
 }
 function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(G))}catch(e){}}
@@ -1115,6 +1172,7 @@ async function endOfMonth(){
     G.month = G.month===12?1:G.month+1;
   }
   renderHUD();
+  await fxMonth();
   await monthEvent();
   for(let i=0;i<G.players.length;i++){
     const p=G.players[i], late=p.jobs.filter(j=>mi()>j.deadline);
@@ -1134,21 +1192,117 @@ async function chooseDestination(from,first){
   if(!cands.length) cands=CITY_NODES.filter(n=>n!==from);
   const dest=pick(cands);
   // ルーレット演出
-  const t0=Date.now();
-  let i=0;
-  while(Date.now()-t0<1500*Math.max(sp(),.5)){
-    sfx('tick');
-    $('#toast').innerHTML=`🎰 次の目的地は… <b style="color:#ffd76a">${NODES[pick(CITY_NODES)].name}</b>`;
-    $('#toast').classList.add('show');
-    await new Promise(r=>setTimeout(r,60+i*4)); i++;
-  }
-  $('#toast').classList.remove('show');
+  const others=CITY_NODES.filter(n=>n!==dest).sort(()=>Math.random()-.5).slice(0,7);
+  const list=[...others,dest].sort(()=>Math.random()-.5), pal=['#ffd166','#9fdcff','#ff9ccc','#a8e6a1','#ffc48a','#d3c0ea','#9ee6ef','#f4a6a6'];
+  await roulette(list.map((c,k)=>({label:NODES[c].name,color:pal[k%8]})),list.indexOf(dest),{title:'🏁 次の目的地ルーレット',human:G.players.some(q=>q.human)&&G.players[G.turn].human});
   G.dest=dest; G.destDist=D[dest];
   renderAll(); focusNode(dest);
   await say(`次の目的地は <b style="color:#e8453c">${NODES[dest].name}</b> に決定！`,{title:'🏁 目的地決定',force:true});
   focusNode(G.players[G.turn].pos);
 }
 
+/* =========================================================
+   演出（エフェクト）
+   ========================================================= */
+const fxDur=ms=>Math.round(ms*(isHumanTurn()?1:Math.max(G?G.speed:1,.45)));
+function fxEl(html,cls){const d=document.createElement('div');d.className=cls;d.innerHTML=html;$('#fxLayer').appendChild(d);return d}
+const fxDone=(d,ms)=>new Promise(r=>setTimeout(()=>{d.remove();r()},ms));
+function nodeScreen(node){const n=NODES[node];const pt=svg.createSVGPoint();pt.x=n.x;pt.y=n.y-16;const q=pt.matrixTransform(svg.getScreenCTM());return [q.x,q.y]}
+function fxFloat(node,text,color){const [x,y]=nodeScreen(node);const d=fxEl(text,'fx-float');d.style.left=x+'px';d.style.top=y+'px';d.style.color=color;setTimeout(()=>d.remove(),1700)}
+function fxCoins(n=16,from){
+  for(let k=0;k<n;k++){const c=fxEl('','fx-coin');
+    if(from!=null){const [x,y]=nodeScreen(from);c.style.left=x+'px';c.style.top=y+'px';c.style.setProperty('--dx',(Math.random()*220-110)+'px');c.style.setProperty('--dy',(-Math.random()*150-50)+'px');c.style.animationName='fxBurst'}
+    else{c.style.left=(Math.random()*100)+'vw';c.style.top='-30px';c.style.setProperty('--dx',(Math.random()*80-40)+'px');c.style.setProperty('--dy',(innerHeight+60)+'px')}
+    c.style.animationDelay=(Math.random()*.5)+'s';setTimeout(()=>c.remove(),2100)}
+}
+function fxShake(){const w=$('#game');w.classList.remove('fx-shake');void w.offsetWidth;w.classList.add('fx-shake')}
+function fxFlash(color){const d=fxEl('','fx-flash');d.style.background=color;setTimeout(()=>d.remove(),650)}
+async function fxBanner(kind,icon,title,sub,ms=1700){const t=fxDur(ms);const d=fxEl(`<span class="ic">${icon}</span><div><div class="tt">${title}</div>${sub?`<div class="sub">${sub}</div>`:''}</div>`,'fx-banner fx-'+kind);d.style.animationDuration=t+'ms';await fxDone(d,t)}
+async function fxCard(c){const t=fxDur(1900);const d=fxEl(`<div class="in" style="animation-duration:${t}ms"><div class="b">?</div><div class="f"><div style="font-size:56px">${CARDS[c].ic}</div><b>${CARDS[c].name}</b><small>${CARDS[c].desc}</small></div></div>`,'fx-card');sfx('card');setTimeout(()=>{d.classList.add('open');sfx('jingle')},t*.4);await fxDone(d,t)}
+async function fxGhost(text,ms=1900){const t=fxDur(ms);sfx('ghost');const d=fxEl(`<div class="g">👻</div><div class="t">${text}</div>`,'fx-ghost');d.style.animationDuration=t+'ms';d.querySelector('.g').style.animationDuration=t+'ms';fxShake();await fxDone(d,t)}
+async function fxStamp(text,color='#e8453c',ms=1500){const t=fxDur(ms);const d=fxEl(text,'fx-stamp');d.style.color=color;d.style.borderColor=color;d.style.animationDuration=t+'ms';setTimeout(()=>{fxShake();sfx('dice')},t*.18);await fxDone(d,t)}
+const SEASON={4:'🌸 お花見ドライブ',5:'🎏 GWは渋滞に注意',6:'☔ 梅雨のドライブ',7:'🎐 夏休みスタート',8:'🎆 夏まつりの季節',9:'🎑 お月見ドライブ',10:'🍁 紅葉シーズン',11:'🍂 秋の味覚めぐり',12:'⛄ 冬タイヤの季節',1:'🎍 あけましておめでとう',2:'👹 節分',3:'📊 決算の月'};
+async function fxMonth(){const t=fxDur(1300);const d=fxEl(`<div class="m">${G.month}<small>月</small></div><div class="s">${SEASON[G.month]}</div>`,'fx-month');d.style.animationDuration=t+'ms';sfx('news');await fxDone(d,t)}
+function fxHearts(set=['💖','💕','🎉','✨','💐']){for(let k=0;k<18;k++){const h=fxEl(pick(set),'fx-heart');h.style.left=(5+Math.random()*90)+'vw';h.style.animationDelay=(Math.random()*.7)+'s';setTimeout(()=>h.remove(),3200)}}
+// ルーレット
+function roulette(segs,target,{title,human}){
+  return new Promise(resolve=>{
+    const n=segs.length, R0=130, box=fxEl('','fx-wheel'); box.style.pointerEvents='auto';
+    let paths='';
+    segs.forEach((g,k)=>{const a0=k/n*2*Math.PI-Math.PI/2, a1=(k+1)/n*2*Math.PI-Math.PI/2, am=(a0+a1)/2;
+      paths+=`<path d="M0 0 L${(Math.cos(a0)*R0).toFixed(1)} ${(Math.sin(a0)*R0).toFixed(1)} A${R0} ${R0} 0 0 1 ${(Math.cos(a1)*R0).toFixed(1)} ${(Math.sin(a1)*R0).toFixed(1)} Z" fill="${g.color}" stroke="#fff" stroke-width="3"/>
+      ${(()=>{const deg=am*180/Math.PI, flip=Math.cos(am)<0, rr=g.icon?R0*.42:R0*.55;
+        const lab=`<text transform="rotate(${(flip?deg+180:deg).toFixed(1)}) translate(${flip?-rr:rr},0)" text-anchor="middle" dominant-baseline="middle" font-size="${g.label.length>5?11:g.label.length>3?13:15}" font-weight="900" fill="#263445">${esc(g.label)}</text>`;
+        return lab+(g.icon?`<text x="${(Math.cos(am)*R0*.8).toFixed(1)}" y="${(Math.sin(am)*R0*.8+8).toFixed(1)}" text-anchor="middle" font-size="22">${g.icon}</text>`:'')})()}`});
+    box.innerHTML=`<div class="wt">${title}</div><div class="wwrap"><svg viewBox="-150 -160 300 310"><circle r="${R0+10}" fill="#263445"/>${[...Array(n*2)].map((_,k)=>{const a=k/(n*2)*Math.PI*2;return `<circle cx="${(Math.cos(a)*(R0+5)).toFixed(1)}" cy="${(Math.sin(a)*(R0+5)).toFixed(1)}" r="3" fill="#ffe27a"/>`}).join('')}<g class="wheel">${paths}</g><circle r="20" fill="#fff" stroke="#263445" stroke-width="4"/><text y="6" text-anchor="middle" font-size="16">🚗</text><path d="M-15 -158 L15 -158 L0 -124 Z" fill="#e8453c" stroke="#fff" stroke-width="3"/></svg></div><div class="wb">${human?'<button class="primary big">🎰 ルーレットを回す</button>':''}</div>`;
+    const wheel=box.querySelector('.wheel');
+    const spin=()=>{const btn=box.querySelector('button');if(btn)btn.remove();
+      const segA=360/n, center=target*segA+segA/2, jit=(Math.random()-.5)*segA*.6;
+      const rot=360*6-center-jit, dur=human?3600:Math.max(1500,fxDur(3000));
+      wheel.style.transition=`transform ${dur}ms cubic-bezier(.12,.72,.12,1)`; wheel.style.transform=`rotate(${rot}deg)`;
+      const t0=performance.now(); const tick=()=>{const k=(performance.now()-t0)/dur;if(k>=.98)return;sfx('tick');setTimeout(tick,35+k*k*300)};tick();
+      setTimeout(()=>{sfx('jingle');box.querySelector('.wb').innerHTML=`<div class="wr">${segs[target].icon||''} ${esc(segs[target].label)}！</div>`;
+        setTimeout(()=>{box.remove();resolve(target)},human?1200:fxDur(900))},dur+60);
+    };
+    if(human) box.querySelector('button').onclick=()=>{audioInit();spin()}; else setTimeout(spin,250);
+  });
+}
+// 人生イベント
+const LIFE=[
+  {k:'marry',icon:'💍',label:'結婚',color:'#ff9ccc'},{k:'promo',icon:'📈',label:'昇進',color:'#a8e6a1'},
+  {k:'baby',icon:'👶',label:'家族がふえる',color:'#ffe08a'},{k:'broken',icon:'🔧',label:'車が故障',color:'#f4a6a6'},
+  {k:'hitch',icon:'👍',label:'ヒッチハイカー',color:'#9fdcff'},{k:'lottery',icon:'🎰',label:'宝くじ',color:'#ffc48a'},
+  {k:'house',icon:'🏠',label:'マイホーム',color:'#d3c0ea'},{k:'trip',icon:'✈️',label:'家族旅行',color:'#9ee6ef'},
+];
+async function lifeEvent(i,node){
+  const p=G.players[i]; p.pax=p.pax||[];
+  await fxBanner('life','🎉','人生マス！',`${esc(p.name)} の人生ルーレット`,1300);
+  const LW=[p.married?1:2.5,1,2.2,1,1.5,1,1,1];let rr=Math.random()*LW.reduce((x,y)=>x+y),tk=0;while(rr>LW[tk]){rr-=LW[tk];tk++}
+  const k=await roulette(LIFE,tk,{title:`🎉 ${esc(p.name)} の人生ルーレット`,human:p.human});
+  const ev=LIFE[k].k, full=p.pax.length>=CARS[p.car].seats-1, T={title:'🎉 人生イベント'};
+  const gifts=per=>{let tot=0;for(const j of rivals(i)){const q=G.players[j];const v=Math.min(per,Math.max(0,q.money));q.money-=v;tot+=v}p.money+=tot;return tot};
+  switch(ev){
+    case 'marry':{
+      if(p.married){const v=round100(1000*yf());p.money+=v;fxHearts();fxFloat(node,'+'+fmt(v),'#e0559a');renderAll();await say(`💐 結婚記念日！ パートナーとドライブデート♪<br>記念のご祝儀 <b>${fmt(v)}</b>`,T);break}
+      p.married=true; if(!full) p.pax.push('partner'); renderAll();
+      fxHearts(); await fxStamp('祝 結婚！','#e0559a');
+      const t=gifts(round100(500*yf())); renderAll();
+      await say(`💍 ${esc(p.name)} が結婚！ ${full?'車が満員なのでパートナーは電車で追いかけてくる…':'パートナーが助手席に乗った！'}<br>みんなからご祝儀 <b style="color:#e0559a">${fmt(t)}</b>`,T);break;}
+    case 'baby':{
+      if(full){await say(`👶 新しい家族が…と思ったら車が満員！<br>定員の多い車に乗りかえよう（ワゴンは8人乗り）`,T);break}
+      const kid=p.married; p.pax.push(kid?'kid':'pet'); renderAll(); fxHearts(['👶','🍼','💖','✨','🐶']);
+      if(kid){await fxStamp('おめでとう！','#f2a516');const t=gifts(round100(300*yf()));renderAll();await say(`👶 赤ちゃんが生まれた！ 家族がふえた！<br>みんなからお祝い <b>${fmt(t)}</b>`,T)}
+      else await say(`🐶 迷子の子犬を拾った！ 新しい家族だ！<br><small>（結婚していると赤ちゃんが生まれるよ）</small>`,T);
+      break;}
+    case 'hitch':
+      if(full){await say(`👍 ヒッチハイカーがいたけど、車が満員で乗せられなかった…`,T);break}
+      p.pax.push('hitch'); renderAll();
+      await say(`👍 ヒッチハイカーを乗せた！<br>次の都市で降りるとき、お礼をくれるよ`,T);break;
+    case 'promo':{
+      const v=round100(rand(15,40)*100*yf()); p.money+=v; renderAll(); fxCoins(18); fxFloat(node,'+'+fmt(v),'#27ae60');
+      await fxBanner('gold','📈','昇進！',`ボーナス +${fmt(v)}`);log(`📈 ${p.name} が昇進 +${fmt(v)}`);break;}
+    case 'lottery':{
+      const big=Math.random()<.25, v=round100((big?rand(80,200):rand(2,12))*100*yf()); p.money+=v; renderAll();
+      if(big){fxCoins(40);await fxStamp('大当たり！','#f2a516');}
+      fxFloat(node,'+'+fmt(v),'#f2a516');
+      await say(`🎰 宝くじ${big?'が<b>大当たり</b>！！':'で小当たり！'}<br><b style="color:#f2a516">${fmt(v)}</b> ゲット！`,T);break;}
+    case 'house':{
+      const cost=round100(4000*yf()*(1+p.pax.length*.2));
+      if(p.money<cost){await say(`🏠 マイホームを建てたい…でも頭金 ${fmt(cost)} が足りない！`,T);break}
+      p.money-=cost; p.house=(p.house||0)+round100(cost*1.3); renderAll(); fxHearts(['🏠','🎉','✨','🔨']);
+      await fxStamp('マイホーム！','#7b4fa8');
+      await say(`🏠 マイホームを建てた！ ${fmt(cost)} 支払い<br>資産価値 <b>${fmt(round100(cost*1.3))}</b>（総資産にふくまれる）`,T);break;}
+    case 'broken':{
+      const v=round100(rand(5,18)*100*yf()); sfx('bad'); fxShake(); fxFlash('rgba(80,80,80,.35)'); fxFloat(node,'-'+fmt(v),'#eb5757');
+      await fxBanner('red','🔧','車が故障！',`修理代 -${fmt(v)}`); log(`🔧 ${p.name} の車が故障 -${fmt(v)}`); await pay(i,v);break;}
+    case 'trip':{
+      const fam=p.pax.filter(x=>x!=='hitch').length, cost=round100((fam+1)*300*yf()), got=[];
+      for(let k=0;k<Math.min(3,fam+1)&&p.cards.length<HAND_MAX;k++){const c=wpick(YELLOW_TABLE);p.cards.push(c);got.push(CARDS[c].ic+CARDS[c].name)}
+      renderAll();
+      await say(`✈️ ${fam?`家族${fam+1}人で`:'ひとりで'}旅行に行った！ 旅費 ${fmt(cost)}<br>おみやげ：${got.join('、')||'（手札がいっぱい）'}`,T);
+      await pay(i,cost);break;}
+  }
+}
 const baseDice=i=>CARS[G.players[i].car].dice;
 const mi=()=>(G.year-1)*12+((G.month-4+12)%12);
 async function playTurn(i){
@@ -1246,7 +1400,8 @@ async function checkDelivery(i,node){
   for(const j of p.jobs.filter(j=>j.to===node)){
     p.jobs.splice(p.jobs.indexOf(j),1);
     const m=round100(j.reward*(p.car==='truck'?1.5:1)); p.money+=m; renderAll(); sfx('deliver');
-    await say(`📦 配達完了！ ${NODES[j.from].name}の<b>${j.item}</b>を${NODES[node].name}に届けた！<br>報酬 <b style="color:#2f80ed">${fmt(m)}</b>`,{title:'📦 配達完了'});
+    log(`📦 ${p.name}：${j.item}を${NODES[node].name}に配達 +${fmt(m)}`); fxCoins(12,node); fxFloat(node,'+'+fmt(m),'#27ae60');
+    await fxBanner('gold','📦','配達完了！',`${NODES[j.from].name}の${j.item} → ${NODES[node].name}　+${fmt(m)}`);
   }
 }
 function humanPick(i,ends){
@@ -1269,7 +1424,7 @@ function humanPick(i,ends){
     const bar=setActions(`<div class="hint">止まるマスを選んでね（地図の光っているマスをタップでもOK）</div>`);
     list.forEach(n=>{
       const b=document.createElement('button');b.className='endbtn';
-      const t=NODES[n].type, dot={city:'🏙️',blue:'🔵',red:'🔴',yellow:'🟡',sa:'🟣'}[t];
+      const t=NODES[n].type, dot={city:'🏙️',blue:'🔵',red:'🔴',yellow:'🟡',sa:'🟣',life:'💗'}[t];
       const pj=G.players[i].jobs.some(j=>ends.get(n).includes(j.to));
       b.innerHTML=`${dot} ${TYPE_NAME[t]}${t==='city'?'：'+NODES[n].name:''}${pj?' 📦':''}${t==='city'&&DEALERS.includes(NODES[n].name)?' 🚙':''}<small>${n===G.dest?'🏁 目的地！':(t==='city'?'':nearestCityName(n)+'・')+'目的地まで'+D[n]}</small>`;
       b.onmouseenter=()=>focusNode(n);
@@ -1282,7 +1437,7 @@ function cpuPickEnd(i,ends){
   const D=distFrom(G.dest);let best=null,bs=1e9;
   for(const [n,path] of ends){
     let s=D[n]*10; const t=NODES[n].type;
-    if(t==='red')s+=7; if(t==='blue')s-=3; if(t==='yellow')s-=4; if(t==='sa')s-=1; if(t==='city')s-=3;
+    if(t==='red')s+=7; if(t==='life')s-=3; if(t==='blue')s-=3; if(t==='yellow')s-=4; if(t==='sa')s-=1; if(t==='city')s-=3;
     if(n===G.dest)s-=1000;
     const p=G.players[i];
     if(path.some(x=>p.jobs.some(j=>j.to===x))) s-=45;
@@ -1317,27 +1472,34 @@ async function landOn(i,node){
     case 'blue':{
       sfx('coin');
       const m=round100(rand(3,15)*100*yf()*(G.month>=7&&G.month<=8?1.5:1));
-      p.money+=m; renderHUD();
-      await say(`🔵 青マス！ ${pick(['道の駅で野菜が売れた','ドライブ動画がバズった','ガソリン代がキャッシュバック','宝くじが当たった','ご当地グルメ大会で優勝','車の中から へそくり発見'])}<br><b style="color:#2f80ed">${fmt(m)}</b> ゲット！`,{title:'🔵 青マス'});
+      const why=pick(['道の駅で野菜が売れた','ドライブ動画がバズった','ガソリン代がキャッシュバック','ご当地グルメ大会で優勝','車の中から へそくり発見','観光客に道案内してお礼']);
+      p.money+=m; renderHUD(); log(`🔵 ${p.name}：${why} +${fmt(m)}`);
+      fxCoins(m>=1000*yf()?26:14); fxFloat(node,'+'+fmt(m),'#2f80ed');
+      await fxBanner('blue','💰','+'+fmt(m),why);
       break;}
     case 'red':{
       sfx('bad');
       if(p.cards.includes('jaf')){
         p.cards.splice(p.cards.indexOf('jaf'),1); renderHUD();
-        await say(`🔴 赤マス！…でも 🛠️ロードサービスが助けてくれた！支払いゼロ！`,{title:'🔴 赤マス'});break;
+        log(`🛠️ ${p.name}：ロードサービスで赤マスの支払いゼロ`); await fxBanner('blue','🛠️','セーフ！','ロードサービスが助けてくれた！ 支払いゼロ');break;
       }
       const winter=[12,1,2].includes(G.month)&&n.y<1300&&p.car!=='suv';
       const m=round100(rand(2,10)*100*yf()*(winter?1.8:1)*(p.car==='camper'?.5:1));
-      await say(`🔴 赤マス！ ${winter?'大雪でチェーン代がかさんだ… ':pick(['スピード違反で罰金','タイヤがパンク','駐車違反の切符','車検の時期だった','高速料金が思ったより高い','カーナビが壊れた'])}<br><b style="color:#eb5757">${fmt(m)}</b> 支払い…`,{title:'🔴 赤マス'});
+      const why=winter?'大雪でチェーン代がかさんだ…':pick(['スピード違反で罰金','タイヤがパンク','駐車違反の切符','車検の時期だった','高速料金が思ったより高い','カーナビが壊れた']);
+      log(`🔴 ${p.name}：${why} -${fmt(m)}`); fxShake(); fxFlash('rgba(235,87,87,.35)'); fxFloat(node,'-'+fmt(m),'#eb5757');
+      await fxBanner('red','💸','-'+fmt(m),why);
       await pay(i,m);
       break;}
     case 'yellow':{
       sfx('card');
       const c=wpick(YELLOW_TABLE);
       if(p.cards.length>=HAND_MAX){await say(`🟡 黄マス！ ${CARDS[c].ic}${CARDS[c].name}カード…だけど手札がいっぱいで受け取れなかった`,{title:'🟡 黄マス'});break}
-      p.cards.push(c); renderHUD();
-      await say(`🟡 黄マス！<br>${CARDS[c].ic} <b>${CARDS[c].name}</b>カードを手に入れた！<br><small>${CARDS[c].desc}</small>`,{title:'🟡 黄マス'});
+      p.cards.push(c); renderHUD(); log(`🟡 ${p.name}：${CARDS[c].name}カードを手に入れた`);
+      await fxCard(c);
       break;}
+    case 'life':
+      await lifeEvent(i,node);
+      break;
     case 'sa':
       await refuel(i,node);
       if(p.human) await cardShop(i); else await cpuCardShop(i);
@@ -1406,7 +1568,7 @@ async function arrive(i){
     if(far>=0){
       const fresh=G.ghost.holder<0;
       G.ghost.holder=far; renderAll(); focusNode(G.players[far].pos);
-      await sleep(500);
+      await sleep(300); await fxGhost(`ブスブスが ${esc(G.players[far].name)} に取りついた！`);
       await say(`👻 「ブスブス〜」<br>${fresh?'ガス欠おばけ ブスブスが現れて':'ブスブスが'} 一番遠くにいる <b>${esc(G.players[far].name)}</b> に取りついた！`,{title:'👻 ブスブス',force:true});
     }
   }
@@ -1426,6 +1588,9 @@ function shopRow(sid,i){
   return `<div class="shop"><div class="n"><b>${s.name}</b><small>${fmt(s.price)}　収益率${s.rate}%（年${fmt(inc)}）${s.gas?'<br>＋ライバルがここで給油した代金が入る':''}</small></div>${right}</div>`;
 }
 async function cityVisit(i,node){
+  const p=G.players[i];
+  if((p.pax||[]).includes('hitch')){const n=p.pax.filter(x=>x==='hitch').length;p.pax=p.pax.filter(x=>x!=='hitch');const v=round100(n*rand(6,14)*100*yf());p.money+=v;renderAll();
+    log(`👍 ${p.name}：ヒッチハイカーからお礼 +${fmt(v)}`);fxCoins(10,node);fxFloat(node,'+'+fmt(v),'#27ae60');await fxBanner('life','👍','ありがとう！',`ヒッチハイカーが${NODES[node].name}で降りてお礼 +${fmt(v)}`)}
   await refuel(i,node);
   if(G.players[i].human) await cityShop(i,node); else await cpuCity(i,node);
 }
@@ -1451,8 +1616,8 @@ function cityShop(i,node){
       }else{
         const trade=Math.round(CARS[p.car].price/2);
         h+=`${G.fx.sale===mi()?'<p style="margin:0 0 4px;color:#e8453c;font-weight:700">🎉 新車フェア開催中！ 全車3割引き</p>':''}<p style="font-size:13px;color:#666;margin:0 0 4px">今の車（${CARS[p.car].name}）は ${fmt(trade)} で下取り。買うと満タンでお渡し！</p>`+
-        Object.keys(CARS).filter(k=>k!=='kei').map(k=>{const c=CARS[k], net=round100(c.price*yf())-trade, own=p.car===k, small=p.jobs.length>c.cargo;
-          return `<div class="job"><div class="n"><b>${c.name}</b><small>サイコロ${c.dice}個・タンク${c.tank}L・荷物${c.cargo}<br>${c.desc}</small></div>
+        Object.keys(CARS).filter(k=>k!=='kei').map(k=>{const c=CARS[k], net=round100(c.price*yf())-trade, own=p.car===k, small=p.jobs.length>c.cargo||(p.pax||[]).length>c.seats-1;
+          return `<div class="job"><div class="n"><b>${c.name}</b><small>サイコロ${c.dice}個・タンク${c.tank}L・荷物${c.cargo}・定員${c.seats}人<br>${c.desc}</small></div>
           <button class="primary" data-c="${k}" ${own||small||p.money<net?'disabled':''}>${own?'乗ってる':fmt(net)}</button></div>`}).join('');
       }
       body.innerHTML=h;
@@ -1462,7 +1627,8 @@ function cityShop(i,node){
         if(p.money<s.price||G.owner[sid]!=null)return;
         p.money-=s.price; G.owner[sid]=i; sfx('buy'); log(`🏪 ${p.name} が ${n.name}の${s.name}を購入`);
         renderAll(); draw();
-        if(monopolyOwner(node)===i) toast(`★ ${n.name}を独占！ 収益2倍！`);
+        fxFloat(node,'-'+fmt(s.price),'#e8453c');
+        if(monopolyOwner(node)===i){fxCoins(30);fxStamp(n.name+' 独占！','#f2a516',1800)}
       });
       body.querySelectorAll('[data-j]').forEach(b=>b.onclick=()=>{
         const j=jobs[+b.dataset.j]; if(p.jobs.length>=CARS[p.car].cargo||p.jobs.includes(j))return;
@@ -1476,7 +1642,7 @@ function cityShop(i,node){
 function carPrice(k){return round100(CARS[k].price*yf()*(G.fx.sale===mi()?.7:1))}
 function buyCar(i,k){
   const p=G.players[i], net=carPrice(k)-Math.round(CARS[p.car].price/2);
-  if(p.money<net||p.jobs.length>CARS[k].cargo) return false;
+  if(p.money<net||p.jobs.length>CARS[k].cargo||(p.pax||[]).length>CARS[k].seats-1) return false;
   p.money-=net; p.car=k; p.fuel=CARS[k].tank;
   log(`🚙 ${p.name} が ${CARS[k].name} に乗りかえた`);
   buildTokens(); renderAll(); return true;
@@ -1488,7 +1654,7 @@ async function cpuCity(i,node){
   // 車
   if(DEALERS.includes(n.name)){
     const trade=Math.round(CARS[p.car].price/2);
-    const opts=Object.keys(CARS).filter(k=>CARS[k].price>CARS[p.car].price && p.money-(carPrice(k)-trade)>=3000*yf() && p.jobs.length<=CARS[k].cargo);
+    const opts=Object.keys(CARS).filter(k=>CARS[k].price>CARS[p.car].price && p.money-(carPrice(k)-trade)>=3000*yf() && p.jobs.length<=CARS[k].cargo&&(p.pax||[]).length<=CARS[k].seats-1);
     if(opts.length && Math.random()<.7){const k=opts.sort((a,b)=>CARS[b].price-CARS[a].price)[0]; if(buyCar(i,k)) msgs.push(`🚙 ${CARS[k].name}に乗りかえ`)}
   }
   // お店
@@ -1498,7 +1664,7 @@ async function cpuCity(i,node){
     const s=SHOPS[sid];
     if(p.money-s.price>=reserve){p.money-=s.price;G.owner[sid]=i;bought.push(s.name)}
   }
-  if(bought.length) sfx('buy');
+  if(bought.length){sfx('buy');if(monopolyOwner(node)===i){fxCoins(30);await fxStamp(n.name+' 独占！','#f2a516',1800)}}
   if(bought.length) msgs.push(`🏪「${bought.join('」「')}」を購入${monopolyOwner(node)===i?'（★独占！）':''}`);
   // 配達
   const D=distFrom(G.dest);
@@ -1733,8 +1899,8 @@ async function cpuAction(i){
 
 /* ブスブス */
 async function ghostAct(i){
-  sfx('ghost');
   const p=G.players[i], g=G.ghost;
+  await fxGhost(`${esc(p.name)}のブスブスがいたずら中…`,1400);
   g.months++;
   if(p.cards.includes('omamori')){p.cards.splice(p.cards.indexOf('omamori'),1);renderHUD();
     await say(`👻 ブスブスがいたずらしようとしたけど… 🔰お守りが光って追い返した！<br><small>（お守りは1枚なくなった）</small>`,{title:'👻 ブスブス'});return}
@@ -1830,14 +1996,14 @@ async function monthEvent(){
       const list=edgesTouching(cids,e=>e.kind!=='road'); const extra=pick(edgesTouching(cids,e=>e.kind==='road'));
       if(extra!=null) list.push(extra);
       closeEdges(list,1);
-      focusNode(cids[0]); renderAll();
+      focusNode(cids[0]); renderAll(); fxShake(); fxFlash('rgba(255,255,255,.7)');
       await news(`🌀 大型台風が<b>${r}</b>を直撃！<br>${list.length?`🚧 ${list.map(edgeName).join('、')} が今月通行止め<br>`:''}${Object.keys(got).length?'お店の修理代：<br>'+Object.keys(got).map(o=>`<span style="color:${G.players[o].color}">●</span> ${esc(G.players[o].name)} <b style="color:#eb5757">-${fmt(got[o])}</b>`).join('<br>'):''}`,'🌀 台風');
       for(const o in got) await pay(+o,got[o]);
       break;}
     case 'snow':{
       const cids=cityIds(SNOW_CITIES), all=edgesTouching(cids,e=>e.kind==='road');
       const list=all.sort(()=>Math.random()-.5).slice(0,rand(2,4));
-      closeEdges(list,1); focusNode(EDGES[list[0]].a); renderAll();
+      closeEdges(list,1); focusNode(EDGES[list[0]].a); renderAll(); fxFlash('rgba(255,255,255,.8)');
       await news(`🌨️ 大雪で道路が通行止め！<br>🚧 ${list.map(edgeName).join('、')}<br><small>今月いっぱい通れないよ</small>`,'🌨️ 大雪');break;}
     case 'work':{
       const k=pick(EDGES.map((e,k)=>k).filter(k=>EDGES[k].kind==='road'&&EDGES[k].nodes.length));
@@ -1867,13 +2033,14 @@ async function monthEvent(){
 /* 決算・終了 */
 async function settlement(){
   sfx('jingle');
-  const rows=G.players.map((p,i)=>{const inc=yearlyIncome(i);p.money+=inc;return {p,i,inc}});
+  const rows=G.players.map((p,i)=>{const inc=yearlyIncome(i), fam=(p.pax||[]).filter(x=>x!=='hitch').length, fb=round100(fam*500*yf())*(fam?1:0);p.money+=inc+fb;return {p,i,inc,fb}});
   renderAll();
   log(`📊 ${G.year}年目の決算`);
   const rank=[...G.players.keys()].sort((a,b)=>totalAssets(b)-totalAssets(a));
   await modal({title:`📊 ${G.year}年目 決算（3月）`,html:`
-    <table class="tbl"><tr><th>プレイヤー</th><th>お店の収益</th><th>所持金</th></tr>
-    ${rows.map(r=>`<tr><td><span style="color:${r.p.color}">●</span> ${esc(r.p.name)}</td><td>+${fmt(r.inc)}</td><td>${fmt(r.p.money)}</td></tr>`).join('')}</table>
+    <table class="tbl"><tr><th>プレイヤー</th><th>お店の収益</th><th>家族ボーナス</th><th>所持金</th></tr>
+    ${rows.map(r=>`<tr><td><span style="color:${r.p.color}">●</span> ${esc(r.p.name)}</td><td>+${fmt(r.inc)}</td><td>${r.fb?'+'+fmt(r.fb):'-'}</td><td>${fmt(r.p.money)}</td></tr>`).join('')}</table>
+    <div style="margin-top:12px">${(()=>{const mx=Math.max(1,...rows.map(r=>totalAssets(r.i)));return rows.map(r=>`<div style="display:flex;align-items:center;gap:6px;margin:4px 0;font-size:13px"><span style="width:84px;overflow:hidden;white-space:nowrap">${esc(r.p.name)}</span><span style="flex:1;background:#eee;border-radius:6px;height:16px;overflow:hidden"><i style="display:block;height:100%;width:${Math.max(2,totalAssets(r.i)/mx*100)}%;background:${r.p.color};animation:barGrow 1.2s ease-out both"></i></span></div>`).join('')})()}</div>
     <h3 style="margin:16px 0 4px">総資産ランキング</h3>
     <table class="tbl">${rank.map((j,k)=>`<tr><td>${['🥇','🥈','🥉','4位'][k]} ${esc(G.players[j].name)}</td><td>${fmt(totalAssets(j))}</td></tr>`).join('')}</table>
     ${G.year<G.years?`<p style="color:#888;font-size:13px">のこり ${G.years-G.year}年！</p>`:''}`});
@@ -1896,7 +2063,7 @@ async function showCars(i){
     <p style="margin:0 0 6px;font-size:14px">地図の <b>🚙マーク</b> がついた都市（カーディーラー）に止まると、車を買いかえられるよ。今の車は ${fmt(trade)} で下取り。</p>
     <p style="margin:0 0 10px;font-size:13px;color:#555">近いディーラー：${ds.slice(0,3).map(c=>`<b>${NODES[c].name}</b>（あと${D[c]}マス）`).join('、')}</p>
     ${Object.keys(CARS).map(k=>{const c=CARS[k];return `<div class="job"><svg viewBox="-22 -24 44 34" style="width:54px;height:42px;flex:none;overflow:visible">${carSVG(p.color,k)}</svg>
-      <div class="n"><b>${c.name}${p.car===k?'（乗ってる）':''}</b><small>サイコロ${c.dice}個・タンク${c.tank}L・荷物${c.cargo}個${c.price?'・'+fmt(carPrice(k)):''}<br>${c.desc}</small></div></div>`}).join('')}
+      <div class="n"><b>${c.name}${p.car===k?'（乗ってる）':''}</b><small>サイコロ${c.dice}個・タンク${c.tank}L・荷物${c.cargo}個・定員${c.seats}人${c.price?'・'+fmt(carPrice(k)):''}<br>${c.desc}</small></div></div>`}).join('')}
     ${G.fx.sale===mi()?'<p style="color:#e8453c;font-weight:700">🎉 今月は新車フェアで3割引き！</p>':''}`});
 }
 async function showProps(i){
