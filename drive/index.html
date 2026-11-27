@@ -174,7 +174,7 @@ button.primary:active{transform:translateY(2px);box-shadow:0 1px 0 #c57f00}
   <div id="top">
     <div class="date" id="date"></div>
     <div class="dest" id="dest"></div>
-    <button id="menuBtn">メニュー</button>
+    <button id="sndBtn" title="BGM＋効果音">🔊</button><button id="menuBtn">メニュー</button>
   </div>
   <div id="main">
     <div id="mapWrap">
@@ -704,15 +704,102 @@ async function rollDice(n){
   const vals=[...Array(n)].map(()=>rand(1,6));
   const t0=Date.now(), dur=700*sp()+200;
   while(Date.now()-t0<dur){
+    sfx('tick');
     box.innerHTML=`<div class="row">${[...Array(n)].map(()=>dieHTML(rand(1,6),true)).join('')}</div>`;
     await new Promise(r=>setTimeout(r,70));
   }
   const sum=vals.reduce((a,b)=>a+b,0);
+  sfx('dice');
   box.innerHTML=`<div class="row">${vals.map(v=>dieHTML(v)).join('')}</div><div class="sum">${sum}マス すすむ！</div>`;
   await sleep(900);
   box.hidden=true;
   return sum;
 }
+
+/* =========================================================
+   サウンド（Web Audio で合成。音声ファイルなし）
+   ========================================================= */
+const SND={ctx:null,master:null,bgm:null,se:null,mode:2,timer:null,next:0,step:0,on:false};
+try{const v=localStorage.getItem('nippon-drive-sound');if(v!=null)SND.mode=+v}catch(e){}
+function audioInit(){
+  if(SND.ctx){if(SND.ctx.state==='suspended')SND.ctx.resume();return}
+  const AC=window.AudioContext||window.webkitAudioContext; if(!AC)return;
+  const c=SND.ctx=new AC();
+  SND.master=c.createGain(); SND.master.gain.value=.6; SND.master.connect(c.destination);
+  SND.bgm=c.createGain(); SND.bgm.connect(SND.master);
+  SND.se=c.createGain(); SND.se.connect(SND.master);
+  applySoundMode();
+  document.addEventListener('visibilitychange',()=>{if(!SND.ctx)return;document.hidden?SND.ctx.suspend():SND.ctx.resume()});
+}
+function applySoundMode(){
+  if(SND.ctx){SND.bgm.gain.value=SND.mode===2?.16:0;SND.se.gain.value=SND.mode>=1?.9:0}
+  const b=document.getElementById('sndBtn'); if(b){b.textContent=['🔇','🔈','🔊'][SND.mode];b.title=['音なし','効果音のみ','BGM＋効果音'][SND.mode]}
+}
+const mf=n=>440*Math.pow(2,(n-69)/12);
+function tone(f,t,d,{type='square',vol=.2,to=null,out=null,attack=.005}={}){
+  const c=SND.ctx; if(!c)return;
+  const o=c.createOscillator(), g=c.createGain();
+  o.type=type; o.frequency.setValueAtTime(f,t); if(to) o.frequency.exponentialRampToValueAtTime(to,t+d);
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+attack); g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o.connect(g); g.connect(out||SND.se); o.start(t); o.stop(t+d+.02);
+}
+let noiseBuf=null;
+function noise(t,d,{vol=.15,hp=6000,out=null}={}){
+  const c=SND.ctx; if(!c)return;
+  if(!noiseBuf){noiseBuf=c.createBuffer(1,c.sampleRate*.5,c.sampleRate);const a=noiseBuf.getChannelData(0);for(let i=0;i<a.length;i++)a[i]=Math.random()*2-1}
+  const s=c.createBufferSource(), f=c.createBiquadFilter(), g=c.createGain();
+  s.buffer=noiseBuf; f.type='highpass'; f.frequency.value=hp;
+  g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  s.connect(f); f.connect(g); g.connect(out||SND.se); s.start(t); s.stop(t+d+.02);
+}
+// 効果音
+function sfx(name){
+  const c=SND.ctx; if(!c||SND.mode===0)return; const t=c.currentTime+.01;
+  const seq=(notes,len,o={})=>notes.forEach((n,k)=>n&&tone(mf(n),t+k*len,len*1.6,o));
+  switch(name){
+    case 'click': tone(1200,t,.04,{type:'square',vol:.06});break;
+    case 'tick':  tone(900+Math.random()*500,t,.03,{type:'triangle',vol:.12});break;
+    case 'dice':  tone(500,t,.08,{type:'square',vol:.15});tone(1000,t+.07,.12,{type:'square',vol:.12});break;
+    case 'step':  tone(660,t,.05,{type:'triangle',vol:.12});tone(880,t+.03,.05,{type:'triangle',vol:.08});break;
+    case 'coin':  tone(mf(83),t,.08,{vol:.12});tone(mf(88),t+.08,.35,{vol:.12});break;
+    case 'bad':   tone(400,t,.45,{type:'sawtooth',vol:.12,to:120});break;
+    case 'card':  seq([84,88,91,96],.06,{type:'triangle',vol:.14});break;
+    case 'buy':   tone(mf(84),t,.06,{vol:.12});tone(mf(91),t+.07,.3,{vol:.12});noise(t+.07,.15,{vol:.08,hp:8000});break;
+    case 'gas':   noise(t,.5,{vol:.07,hp:2500});tone(220,t,.5,{type:'sine',vol:.06,to:330});break;
+    case 'deliver':seq([79,0,84],.12,{type:'triangle',vol:.16});tone(mf(88),t+.24,.4,{type:'triangle',vol:.14});break;
+    case 'ghost': tone(300,t,.9,{type:'sine',vol:.15,to:150});tone(310,t+.05,.9,{type:'triangle',vol:.08,to:140});break;
+    case 'news':  seq([84,79,76,84],.13,{type:'triangle',vol:.14});break;
+    case 'storm': noise(t,1.2,{vol:.12,hp:300});tone(80,t,1,{type:'sawtooth',vol:.05,to:50});break;
+    case 'engine':tone(55,t,1.1,{type:'sawtooth',vol:.12,to:180});tone(110,t+.05,1,{type:'square',vol:.04,to:260});break;
+    case 'fanfare':seq([72,72,72,79,0,76,79,84],.11,{vol:.13});seq([60,0,0,67,0,64,67,72],.11,{type:'triangle',vol:.12});break;
+    case 'jingle':seq([76,79,84,83,84],.1,{type:'triangle',vol:.14});break;
+  }
+}
+// BGM（オリジナルのドライブ曲。8分音符単位、-1=のばす 0=休み）
+const MEL=[76,79,84,79,76,74,72,74, 76,-1,76,79,81,-1,79,76, 77,-1,77,76,74,-1,72,74, 76,-1,74,-1,71,-1,67,0,
+           72,76,79,84,83,-1,79,76, 81,-1,79,76,72,-1,76,79, 77,79,81,-1,79,77,76,74, 74,-1,71,74,72,-1,-1,0];
+const BASS=[48,45,41,43,48,45,41,43];
+const ROOT_CHORD={48:[64,67],45:[64,69],41:[65,69],43:[62,67]};
+const BEAT=60/138/2;
+function bgmStart(){
+  if(!SND.ctx||SND.timer)return;
+  SND.next=SND.ctx.currentTime+.1; SND.step=0;
+  SND.timer=setInterval(()=>{
+    const c=SND.ctx; if(c.state!=='running')return;
+    while(SND.next<c.currentTime+.25){
+      const k=SND.step%64, t=SND.next, bar=Math.floor(k/8), b=k%8, root=BASS[bar];
+      const n=MEL[k];
+      if(n>0){let len=1;while(MEL[(k+len)%64]===-1)len++;tone(mf(n),t,BEAT*len*.95,{type:'square',vol:.07,out:SND.bgm})}
+      tone(mf(root-(b%2?-12:0)),t,BEAT*.9,{type:'triangle',vol:.22,out:SND.bgm});
+      if(b===0||b===4) ROOT_CHORD[root].forEach(x=>tone(mf(x-12),t,BEAT*3.5,{type:'sine',vol:.05,out:SND.bgm,attack:.03}));
+      if(b%4===0) tone(120,t,.18,{type:'sine',vol:.35,to:40,out:SND.bgm});
+      if(b%4===2) noise(t,.12,{vol:.07,hp:1500,out:SND.bgm});
+      if(b%2===1) noise(t,.04,{vol:.05,hp:7000,out:SND.bgm});
+      SND.next+=BEAT; SND.step++;
+    }
+  },40);
+}
+document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('button'))sfx('click')},true);
 
 /* =========================================================
    ゲーム進行
@@ -787,6 +874,7 @@ async function chooseDestination(from,first){
   const t0=Date.now();
   let i=0;
   while(Date.now()-t0<1500*Math.max(sp(),.5)){
+    sfx('tick');
     $('#toast').innerHTML=`🎰 次の目的地は… <b style="color:#ffd76a">${NODES[pick(CITY_NODES)].name}</b>`;
     $('#toast').classList.add('show');
     await new Promise(r=>setTimeout(r,60+i*4)); i++;
@@ -862,6 +950,7 @@ async function moveFlow(i,steps){
   await landOn(i,target);
 }
 async function gasOut(i){
+  sfx('bad');
   const p=G.players[i], fee=round100(500*yf());
   await say(`💨 ガス欠！ ロードサービスを呼んで 8L 入れてもらった。<br>出張費 <b style="color:#eb5757">${fmt(fee)}</b>`,{title:'⛽ ガス欠'});
   p.fuel=8; await pay(i,fee);
@@ -876,7 +965,7 @@ async function refuel(i,node){
   if(p.money<=0) return;
   liters=Math.min(liters,Math.floor(p.money/unit)); if(liters<=0) return;
   const cost=round100(liters*unit);
-  p.fuel+=liters; p.money-=cost;
+  p.fuel+=liters; p.money-=cost; sfx('gas');
   let to='';
   if(owner!=null){G.players[owner].money+=cost;to=`<br><small>→ ${esc(G.players[owner].name)}のスタンドの売上に</small>`}
   renderHUD();
@@ -893,7 +982,7 @@ async function checkDelivery(i,node){
   const p=G.players[i];
   for(const j of p.jobs.filter(j=>j.to===node)){
     p.jobs.splice(p.jobs.indexOf(j),1);
-    const m=round100(j.reward*(p.car==='truck'?1.5:1)); p.money+=m; renderAll();
+    const m=round100(j.reward*(p.car==='truck'?1.5:1)); p.money+=m; renderAll(); sfx('deliver');
     await say(`📦 配達完了！ ${NODES[j.from].name}の<b>${j.item}</b>を${NODES[node].name}に届けた！<br>報酬 <b style="color:#2f80ed">${fmt(m)}</b>`,{title:'📦 配達完了'});
   }
 }
@@ -946,7 +1035,7 @@ async function animateMove(i,path){
   tokEls[i].querySelector('g').classList.add('bob');
   let passed=false;
   for(const n of path){
-    p.pos=n; renderTokens(); focusNode(n);
+    p.pos=n; renderTokens(); focusNode(n); sfx('step');
     await sleep(170);
     if(NODES[n].type==='city'&&p.jobs.some(j=>j.to===n)) await checkDelivery(i,n);
     if(!passed && G.ghost.holder===i){
@@ -963,11 +1052,13 @@ async function landOn(i,node){
   if(node===G.dest){await arrive(i);return}
   switch(n.type){
     case 'blue':{
+      sfx('coin');
       const m=round100(rand(3,15)*100*yf()*(G.month>=7&&G.month<=8?1.5:1));
       p.money+=m; renderHUD();
       await say(`🔵 青マス！ ${pick(['道の駅で野菜が売れた','ドライブ動画がバズった','ガソリン代がキャッシュバック','宝くじが当たった','ご当地グルメ大会で優勝','車の中から へそくり発見'])}<br><b style="color:#2f80ed">${fmt(m)}</b> ゲット！`,{title:'🔵 青マス'});
       break;}
     case 'red':{
+      sfx('bad');
       if(p.cards.includes('jaf')){
         p.cards.splice(p.cards.indexOf('jaf'),1); renderHUD();
         await say(`🔴 赤マス！…でも 🛠️ロードサービスが助けてくれた！支払いゼロ！`,{title:'🔴 赤マス'});break;
@@ -978,6 +1069,7 @@ async function landOn(i,node){
       await pay(i,m);
       break;}
     case 'yellow':{
+      sfx('card');
       const c=wpick(YELLOW_TABLE);
       if(p.cards.length>=HAND_MAX){await say(`🟡 黄マス！ ${CARDS[c].ic}${CARDS[c].name}カード…だけど手札がいっぱいで受け取れなかった`,{title:'🟡 黄マス'});break}
       p.cards.push(c); renderHUD();
@@ -1011,6 +1103,7 @@ async function arrive(i){
   const prize=round100((3000+G.destDist*300)*yf());
   p.money+=prize; renderAll();
   log(`🏁 ${p.name} が ${NODES[G.dest].name} に一番乗り！ ${fmt(prize)}`);
+  sfx('fanfare');
   await modal({title:'🏁 目的地到着！',html:`<div class="big-msg" style="font-size:24px">🎉 ${esc(p.name)} が<br>${NODES[G.dest].name}に一番乗り！ 🎉</div>
     <p style="text-align:center">賞金 <b style="font-size:22px;color:#f2a516">${fmt(prize)}</b></p>`});
   // ブスブス
@@ -1074,7 +1167,7 @@ function cityShop(i,node){
       body.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{
         const sid=+b.dataset.buy, s=SHOPS[sid];
         if(p.money<s.price||G.owner[sid]!=null)return;
-        p.money-=s.price; G.owner[sid]=i; log(`🏪 ${p.name} が ${n.name}の${s.name}を購入`);
+        p.money-=s.price; G.owner[sid]=i; sfx('buy'); log(`🏪 ${p.name} が ${n.name}の${s.name}を購入`);
         renderAll(); draw();
         if(monopolyOwner(node)===i) toast(`★ ${n.name}を独占！ 収益2倍！`);
       });
@@ -1112,6 +1205,7 @@ async function cpuCity(i,node){
     const s=SHOPS[sid];
     if(p.money-s.price>=reserve){p.money-=s.price;G.owner[sid]=i;bought.push(s.name)}
   }
+  if(bought.length) sfx('buy');
   if(bought.length) msgs.push(`🏪「${bought.join('」「')}」を購入${monopolyOwner(node)===i?'（★独占！）':''}`);
   // 配達
   const D=distFrom(G.dest);
@@ -1196,7 +1290,7 @@ async function cardMenu(i){
 async function useCard(i,idx){
   const p=G.players[i], c=p.cards[idx];
   p.cards.splice(idx,1); renderHUD();
-  log(`🃏 ${p.name} が${CARDS[c].name}カードを使った`);
+  log(`🃏 ${p.name} が${CARDS[c].name}カードを使った`); sfx('card');
   switch(c){
     case 'turbo': await toast(`🔥 ${esc(p.name)}：ターボ！ サイコロ${baseDice(i)+1}個！`,900); return {dice:baseDice(i)+1};
     case 'nitro': await toast(`🚀 ${esc(p.name)}：ニトロ点火！ サイコロ${baseDice(i)+2}個！`,900); return {dice:baseDice(i)+2};
@@ -1267,6 +1361,7 @@ async function cpuAction(i){
 
 /* ブスブス */
 async function ghostAct(i){
+  sfx('ghost');
   const p=G.players[i], g=G.ghost;
   g.months++;
   if(g.level===1 && g.months>=10){
@@ -1315,7 +1410,7 @@ async function ghostAct(i){
 
 /* 毎月のニュース（イベント） */
 function fuelMult(){return G.fx.oilUntil!=null&&mi()<=G.fx.oilUntil?G.fx.oil:1}
-function news(html,title='📰 ニュース'){log(html.replace(/<[^>]+>/g,''));return modal({title,html:`<div style="font-size:16px;line-height:1.8">${html}</div>`})}
+function news(html,title='📰 ニュース'){sfx(/台風|大雪/.test(title)?'storm':'news');log(html.replace(/<[^>]+>/g,''));return modal({title,html:`<div style="font-size:16px;line-height:1.8">${html}</div>`})}
 function cityIds(names){return names.map(n=>CITY_BY_NAME[n])}
 function edgesTouching(cids,pred){return EDGES.map((e,k)=>k).filter(k=>EDGES[k].nodes.length&&(cids.includes(EDGES[k].a)||cids.includes(EDGES[k].b))&&(!pred||pred(EDGES[k])))}
 function closeEdges(list,months){const until=mi()+months-1;list.forEach(k=>G.closed[k]=Math.max(G.closed[k]||0,until))}
@@ -1397,6 +1492,7 @@ async function monthEvent(){
 
 /* 決算・終了 */
 async function settlement(){
+  sfx('jingle');
   const rows=G.players.map((p,i)=>{const inc=yearlyIncome(i);p.money+=inc;return {p,i,inc}});
   renderAll();
   log(`📊 ${G.year}年目の決算`);
@@ -1409,6 +1505,7 @@ async function settlement(){
     ${G.year<G.years?`<p style="color:#888;font-size:13px">のこり ${G.years-G.year}年！</p>`:''}`});
 }
 async function gameOver(){
+  sfx('fanfare');
   clearSave();
   const rank=[...G.players.keys()].sort((a,b)=>totalAssets(b)-totalAssets(a));
   const w=G.players[rank[0]];
@@ -1435,6 +1532,8 @@ async function showAllCities(){
     return `<div style="padding:6px 0;border-bottom:1px solid #eee"><b>${n.name}</b>${mono>=0?` <span style="color:${G.players[mono].color}">★独占</span>`:''}<br>
     ${n.shops.map(s=>{const o=G.owner[s];return `<span style="font-size:12px;margin-right:8px;${o!=null?'color:'+G.players[o].color+';font-weight:700':'color:#888'}">${SHOPS[s].name}(${fmt(SHOPS[s].price)})</span>`}).join('')}</div>`}).join('')});
 }
+$('#sndBtn').onclick=()=>{audioInit();SND.mode=(SND.mode+2)%3;try{localStorage.setItem('nippon-drive-sound',SND.mode)}catch(e){}applySoundMode();if(SND.mode===2)bgmStart()};
+applySoundMode();
 $('#menuBtn').onclick=async()=>{
   const v=await modal({title:'メニュー',html:'<p>ゲームは毎ターン自動でセーブされます。</p>',buttons:[
     {label:'🗾 都市一覧',value:'cities'},{label:'⏩ CPU速度切替',value:'speed'},{label:'🏠 タイトルへ',value:'title'},{label:'とじる',value:null,cls:'primary'}]});
@@ -1456,12 +1555,13 @@ function toTitle(){location.reload()}
   const sv=loadSave();
   if(sv && sv.started){$('#resumeBtn').hidden=false;$('#resumeBtn').textContent=`つづきから（${sv.year}年目 ${sv.month}月）`}
   $('#startBtn').onclick=()=>{
+    audioInit();sfx('engine');bgmStart();
     const setup=[];
     for(let k=0;k<4;k++){const t=$('#pt'+k).value;if(t==='none')continue;setup.push({name:$('#pn'+k).value.trim()||PNAMES[k],color:COLORS[k],human:t==='human'})}
     newGame(setup,+$('#years').value,+$('#speed').value);
     save(); startGame();
   };
-  $('#resumeBtn').onclick=()=>{G=loadSave();if(!G)return;G.quit=false;startGame()};
+  $('#resumeBtn').onclick=()=>{audioInit();sfx('engine');bgmStart();G=loadSave();if(!G)return;G.quit=false;startGame()};
 })();
 </script>
 </body>
