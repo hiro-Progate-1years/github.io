@@ -162,6 +162,7 @@ button.primary:active{transform:translateY(2px);box-shadow:0 1px 0 #c57f00}
       📦 都市で<b>配達の依頼</b>を受けて、名産品を届け先まで運ぶと報酬！<br>
       🚙 大都市の<b>ディーラー</b>で車を買いかえ。トラックは荷物たくさん、SUVは雪に強い、スポーツカーはサイコロ2個！<br>
       🔵 青マス＝お金がもらえる　🔴 赤マス＝お金がへる　🟡 黄マス＝カードがもらえる　🟣 SA＝カードが買える<br>
+      📰 毎月いろいろな<b>ニュース</b>が！ 渋滞・台風・大雪・原油高・ご当地フェス・豊作・新車フェア…<br>
       👻 目的地から一番遠い人には、ガス欠おばけ「<b>ブスブス</b>」が取りつく。ほかの車を追いこすと押しつけられる！<br>
       最後に<b>総資産</b>（お金＋お店の価値）が一番多い人の優勝！
     </div>
@@ -375,7 +376,7 @@ const MEIBUTSU = {'稚内':'昆布','網走':'ホタテ','旭川':'木の家具'
 const COLORS = ['#e8453c','#2f7fe0','#27ae60','#f39c12'];
 const PNAMES = ['あなた','CPUたろう','CPUはなこ','CPUじろう'];
 const HAND_MAX = 8;
-const SAVE_KEY = 'nippon-drive-save-v3';
+const SAVE_KEY = 'nippon-drive-save-v4';
 
 /* =========================================================
    マップ生成（固定シードで毎回同じ）
@@ -403,7 +404,7 @@ ROADS.forEach(([an,bn,kind,wps])=>{
   const seg=[];let L=0;
   for(let k=1;k<pts.length;k++){const d=Math.hypot(pts[k][0]-pts[k-1][0],pts[k][1]-pts[k-1][1]);seg.push(d);L+=d}
   const steps=Math.max(1,Math.round(L/(kind==='ferry'?100:50)));
-  EDGES.push({a,b,kind,pts});
+  EDGES.push({a,b,kind,pts,nodes:[]});
   let prev=a;
   for(let k=1;k<steps;k++){
     let t=k/steps*L, j=0;
@@ -411,7 +412,7 @@ ROADS.forEach(([an,bn,kind,wps])=>{
     const f=Math.min(1,t/seg[j]), x=pts[j][0]+(pts[j+1][0]-pts[j][0])*f, y=pts[j][1]+(pts[j+1][1]-pts[j][1])*f;
     const r=mrnd();
     const type = r<.42?'blue':r<.72?'red':r<.88?'yellow':'sa';
-    const id=addNode({x,y,type,edge:EDGES.length-1});
+    const id=addNode({x,y,type,edge:EDGES.length-1}); EDGES[EDGES.length-1].nodes.push(id);
     link(prev,id); prev=id;
   }
   link(prev,b);
@@ -425,6 +426,19 @@ CITY_NODES.forEach(c=>{
   const sid=SHOPS.length; SHOPS.push({id:sid,city:c,name:'⛽ガソリンスタンド',price:1500+deg*1500,rate:2,gas:true}); n.shops.push(sid);
   n.gas=sid;
 });
+SHOPS.forEach(s=>s.base=s.price);
+function applyPrices(){SHOPS.forEach(s=>s.price=Math.round(s.base*((G.pm&&G.pm[s.city])||1)/100)*100)}
+const REGIONS={
+ '北海道':['稚内','網走','旭川','札幌','帯広','釧路','函館'],
+ '東北':['青森','八戸','秋田','盛岡','山形','仙台','福島','いわき'],
+ '関東':['宇都宮','前橋','水戸','さいたま','東京','千葉','横浜','甲府'],
+ '中部':['新潟','上越','長野','松本','富山','金沢','福井','高山','岐阜','名古屋','静岡','浜松','津'],
+ '近畿':['京都','大阪','奈良','神戸','和歌山','串本','姫路'],
+ '中国・四国':['鳥取','松江','岡山','広島','山口','高松','徳島','松山','高知'],
+ '九州・沖縄':['北九州','福岡','佐賀','長崎','熊本','大分','宮崎','鹿児島','奄美','名護','那覇'],
+};
+const SNOW_CITIES=[...REGIONS['北海道'],...REGIONS['東北'],'新潟','上越','長野','松本','富山','金沢','福井','高山'];
+const FARM_RE=/園|農|畑|牧場|漁|養殖|ぶどう|りんご|梨|みかん|ゆず|さくらんぼ|茶|ワイナリー|酒蔵/;
 const LAND=COAST.split('|').map(r=>r.split(' ').map(p=>p.split(',').map(Number)));
 const TYPE_NAME={city:'都市',blue:'青マス',red:'赤マス',yellow:'黄マス',sa:'SA'};
 
@@ -565,6 +579,7 @@ function renderDest(){
   const n=NODES[G.dest];
   el('circle',{cx:n.x,cy:n.y,r:28,class:'destRing'},layerDest);
   const t=el('text',{x:n.x+14,y:n.y-24,'font-size':26},layerDest); t.textContent='🏁';
+  for(const e in G.closed){const ns=EDGES[e].nodes;ns.forEach((id,k)=>{if(k%2&&ns.length>2)return;const t=el('text',{x:NODES[id].x,y:NODES[id].y+7,'font-size':20,'text-anchor':'middle'},layerDest);t.textContent='🚧'})}
   const p=G.players[G.turn];
   if(p&&p.human) p.jobs.forEach(j=>{const c=NODES[j.to];const b=el('text',{x:c.x-34,y:c.y-16,'font-size':20},layerDest);b.textContent='📦'});
 }
@@ -647,7 +662,8 @@ function renderHUD(){
   $('#date').textContent=`${G.year}年目 ${G.month}月`;
   const p=G.players[G.turn];
   const D=G.dest!=null?distFrom(G.dest):null;
-  $('#dest').innerHTML = G.dest!=null ? `🏁 目的地 <b>${NODES[G.dest].name}</b>　${esc(p.name)}から あと${D[p.pos]}マス` : '';
+  const fx=[]; if(G.fx.jam===mi())fx.push('🚙渋滞'); if(fuelMult()>1)fx.push('⛽高騰'); if(fuelMult()<1)fx.push('⛽値下がり'); if(G.fx.sale===mi())fx.push('🎉新車フェア'); if(Object.keys(G.closed).length)fx.push('🚧通行止め'+Object.keys(G.closed).length);
+  $('#dest').innerHTML = (G.dest!=null ? `🏁 目的地 <b>${NODES[G.dest].name}</b>　${esc(p.name)}から あと${D[p.pos]}マス` : '')+(fx.length?`　<span style="color:#ffb3b3">${fx.join(' ')}</span>`:'');
   $('#players').innerHTML=G.players.map((q,i)=>`
     <div class="pc ${i===G.turn?'now':''}">
       ${G.ghost.holder===i?`<span class="ghost" title="ブスブス">${G.ghost.level>1?'👻👻':'👻'}</span>`:''}
@@ -705,7 +721,7 @@ function newGame(setup,years,speed){
   const start=CITY_BY_NAME['東京'];
   G={year:1,month:4,turn:0,years,speed,
     players:setup.map(s=>({name:s.name,color:s.color,human:s.human,pos:start,money:10000,cards:['turbo'],skip:0,car:'kei',fuel:CARS.kei.tank,jobs:[]})),
-    owner:{},ghost:{holder:-1,level:1,months:0},dest:null,destDist:0,log:[],started:false};
+    owner:{},pm:{},closed:{},fx:{},ghost:{holder:-1,level:1,months:0},dest:null,destDist:0,log:[],started:false};
 }
 function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(G))}catch(e){}}
 function loadSave(){try{const s=localStorage.getItem(SAVE_KEY);return s?JSON.parse(s):null}catch(e){return null}}
@@ -713,6 +729,7 @@ function clearSave(){try{localStorage.removeItem(SAVE_KEY)}catch(e){}}
 
 async function startGame(){
   $('#title').hidden=true; $('#game').hidden=false;
+  G.pm=G.pm||{};G.closed=G.closed||{};G.fx=G.fx||{};applyPrices();
   buildMap(); buildTokens();
   setZoom(window.innerWidth<760?0.75:1);
   focusNode(G.players[G.turn].pos); cam.x=camT.x; cam.y=camT.y;
@@ -748,6 +765,7 @@ async function endOfMonth(){
     G.month = G.month===12?1:G.month+1;
   }
   renderHUD();
+  await monthEvent();
   for(let i=0;i<G.players.length;i++){
     const p=G.players[i], late=p.jobs.filter(j=>mi()>j.deadline);
     for(const j of late){
@@ -796,11 +814,13 @@ async function playTurn(i){
     await landOn(i,p.pos);
     return;
   }
-  const steps = act.steps!=null ? act.steps : await rollDice(act.dice||baseDice(i));
+  let steps = act.steps!=null ? act.steps : await rollDice(act.dice||baseDice(i));
+  if(act.steps==null && G.fx.jam===mi()){const n=act.dice||baseDice(i);steps=Math.max(1,steps-n);await toast(`🚙🚙🚙 渋滞中… ${n}マス減って ${steps}マス`,1000)}
   await moveFlow(i,steps);
 }
 
 /* 移動 */
+function blocked(m,start){const e=NODES[m].edge;return e!=null&&G.closed[e]!=null&&e!==NODES[start].edge}
 function computeEndpoints(start,steps){
   const res=new Map(), seen=new Set(), stack=[[start,-1,steps,[]]];
   while(stack.length){
@@ -808,7 +828,9 @@ function computeEndpoints(start,steps){
     if(path.length>0 && n===G.dest){if(!res.has(n))res.set(n,path);continue}
     if(rem===0){if(!res.has(n))res.set(n,path);continue}
     const key=n+','+prev+','+rem; if(seen.has(key))continue; seen.add(key);
-    let nb=ADJ[n].filter(m=>m!==prev); if(!nb.length)nb=ADJ[n];
+    const ok=ADJ[n].filter(m=>!blocked(m,start));
+    let nb=ok.filter(m=>m!==prev); if(!nb.length)nb=ok;
+    if(!nb.length){if(path.length&&!res.has(n))res.set(n,path);continue}
     for(const m of nb) stack.push([m,n,rem-1,[...path,m]]);
   }
   return res;
@@ -828,6 +850,7 @@ async function moveFlow(i,steps){
     await say(`⛽ ガソリンが足りない！ <b>${steps}マス</b>しか進めない…`,{title:'⛽ ガソリン不足'});
   }
   const ends=computeEndpoints(p.pos,steps);
+  if(!ends.size){await say(`🚧 通行止めで動けない…`);return}
   let target;
   if(ends.size===1) target=[...ends.keys()][0];
   else if(p.human) target=await humanPick(i,ends);
@@ -847,7 +870,7 @@ async function gasOut(i){
 async function refuel(i,node){
   const p=G.players[i], n=NODES[node], tank=CARS[p.car].tank;
   let liters=tank-p.fuel; if(liters<=0) return;
-  const unit=FUEL_PRICE*yf()*(n.type==='sa'?1.3:1);
+  const unit=FUEL_PRICE*yf()*(n.type==='sa'?1.3:1)*fuelMult();
   const owner=n.type==='city'?G.owner[n.gas]:undefined;
   if(owner===i){p.fuel=tank;renderHUD();await toast(`⛽ 自分のスタンドで満タン！（タダ）`,900);return}
   if(p.money<=0) return;
@@ -1041,7 +1064,7 @@ function cityShop(i,node){
         `<p style="font-size:12px;color:#888;margin-bottom:0">期限までに届けられないと報酬の2割を違約金として払うよ</p>`;
       }else{
         const trade=Math.round(CARS[p.car].price/2);
-        h+=`<p style="font-size:13px;color:#666;margin:0 0 4px">今の車（${CARS[p.car].name}）は ${fmt(trade)} で下取り。買うと満タンでお渡し！</p>`+
+        h+=`${G.fx.sale===mi()?'<p style="margin:0 0 4px;color:#e8453c;font-weight:700">🎉 新車フェア開催中！ 全車3割引き</p>':''}<p style="font-size:13px;color:#666;margin:0 0 4px">今の車（${CARS[p.car].name}）は ${fmt(trade)} で下取り。買うと満タンでお渡し！</p>`+
         Object.keys(CARS).filter(k=>k!=='kei').map(k=>{const c=CARS[k], net=round100(c.price*yf())-trade, own=p.car===k, small=p.jobs.length>c.cargo;
           return `<div class="job"><div class="n"><b>${c.name}</b><small>サイコロ${c.dice}個・タンク${c.tank}L・荷物${c.cargo}<br>${c.desc}</small></div>
           <button class="primary" data-c="${k}" ${own||small||p.money<net?'disabled':''}>${own?'乗ってる':fmt(net)}</button></div>`}).join('');
@@ -1064,8 +1087,9 @@ function cityShop(i,node){
     draw();
   }});
 }
+function carPrice(k){return round100(CARS[k].price*yf()*(G.fx.sale===mi()?.7:1))}
 function buyCar(i,k){
-  const p=G.players[i], net=round100(CARS[k].price*yf())-Math.round(CARS[p.car].price/2);
+  const p=G.players[i], net=carPrice(k)-Math.round(CARS[p.car].price/2);
   if(p.money<net||p.jobs.length>CARS[k].cargo) return false;
   p.money-=net; p.car=k; p.fuel=CARS[k].tank;
   log(`🚙 ${p.name} が ${CARS[k].name} に乗りかえた`);
@@ -1078,7 +1102,7 @@ async function cpuCity(i,node){
   // 車
   if(DEALERS.includes(n.name)){
     const trade=Math.round(CARS[p.car].price/2);
-    const opts=Object.keys(CARS).filter(k=>CARS[k].price>CARS[p.car].price && p.money-(round100(CARS[k].price*yf())-trade)>=3000*yf() && p.jobs.length<=CARS[k].cargo);
+    const opts=Object.keys(CARS).filter(k=>CARS[k].price>CARS[p.car].price && p.money-(carPrice(k)-trade)>=3000*yf() && p.jobs.length<=CARS[k].cargo);
     if(opts.length && Math.random()<.7){const k=opts.sort((a,b)=>CARS[b].price-CARS[a].price)[0]; if(buyCar(i,k)) msgs.push(`🚙 ${CARS[k].name}に乗りかえ`)}
   }
   // お店
@@ -1287,6 +1311,88 @@ async function ghostAct(i){
       p.pos=to; renderAll(); focusNode(to); await sleep(600);
       break;}
   }
+}
+
+/* 毎月のニュース（イベント） */
+function fuelMult(){return G.fx.oilUntil!=null&&mi()<=G.fx.oilUntil?G.fx.oil:1}
+function news(html,title='📰 ニュース'){log(html.replace(/<[^>]+>/g,''));return modal({title,html:`<div style="font-size:16px;line-height:1.8">${html}</div>`})}
+function cityIds(names){return names.map(n=>CITY_BY_NAME[n])}
+function edgesTouching(cids,pred){return EDGES.map((e,k)=>k).filter(k=>EDGES[k].nodes.length&&(cids.includes(EDGES[k].a)||cids.includes(EDGES[k].b))&&(!pred||pred(EDGES[k])))}
+function closeEdges(list,months){const until=mi()+months-1;list.forEach(k=>G.closed[k]=Math.max(G.closed[k]||0,until))}
+function edgeName(k){return NODES[EDGES[k].a].name+'〜'+NODES[EDGES[k].b].name}
+function ownersPayout(sids,frac,label){
+  const got={};
+  sids.forEach(sid=>{const o=G.owner[sid];if(o==null)return;const sh=SHOPS[sid];const v=round100(sh.price*sh.rate/100*frac);got[o]=(got[o]||0)+v});
+  Object.keys(got).forEach(o=>G.players[o].money+=got[o]);
+  const rows=Object.keys(got).map(o=>`<span style="color:${G.players[o].color}">●</span> ${esc(G.players[o].name)} ${label} <b>${fmt(got[o])}</b>`);
+  return rows.length?rows.join('<br>'):'<span style="color:#888">（お店を持っている人はいなかった…）</span>';
+}
+async function monthEvent(){
+  // 期限切れの通行止め・効果を片付ける
+  for(const k in G.closed) if(G.closed[k]<mi()) delete G.closed[k];
+  const m=G.month;
+  // 季節の決まったイベント
+  if(m===5||m===8){
+    G.fx.jam=mi(); renderAll();
+    await news(`🚙🚙🚙 <b>${m===5?'ゴールデンウィーク':'お盆の帰省ラッシュ'}</b>で全国の道が大渋滞！<br>今月はサイコロの目が<b>サイコロの数だけ減る</b>よ（最低1マス）`);
+  }
+  if(Math.random()>.6){renderAll();return}
+  const W={fest:14,boom:10,oil:10,sale:9,work:12,lottery:8};
+  if([12,1,2].includes(m)) W.snow=30;
+  if([8,9,10].includes(m)) W.typhoon=25;
+  if([9,10,11].includes(m)) W.harvest=25;
+  if(m===7) W.summer=20;
+  const ev=wpick(W);
+  switch(ev){
+    case 'fest':{
+      const c=pick(CITY_NODES), n=NODES[c];
+      const body=ownersPayout(n.shops,.5,'に臨時収入');
+      focusNode(c); renderAll();
+      await news(`🎆 <b>${n.name}</b>でご当地フェスが大盛り上がり！<br>${n.name}のお店に半年分の売上が入ったよ<br>${body}`);break;}
+    case 'harvest':{
+      const r=pick(Object.keys(REGIONS)), sids=[];
+      cityIds(REGIONS[r]).forEach(c=>NODES[c].shops.forEach(s=>{if(FARM_RE.test(SHOPS[s].name))sids.push(s)}));
+      const body=ownersPayout(sids,1,'に豊作ボーナス'); renderAll();
+      await news(`🌾 <b>${r}</b>は今年 大豊作！<br>${r}の農園・牧場・漁場などのお店に1年分の収益が入ったよ<br>${body}`);break;}
+    case 'typhoon':{
+      const r=pick(['九州・沖縄','中国・四国','近畿','中部']), cids=cityIds(REGIONS[r]);
+      const got={};
+      cids.forEach(c=>NODES[c].shops.forEach(sid=>{const o=G.owner[sid];if(o==null)return;got[o]=(got[o]||0)+round100(SHOPS[sid].price*.05)}));
+      const list=edgesTouching(cids,e=>e.kind!=='road'); const extra=pick(edgesTouching(cids,e=>e.kind==='road'));
+      if(extra!=null) list.push(extra);
+      closeEdges(list,1);
+      focusNode(cids[0]); renderAll();
+      await news(`🌀 大型台風が<b>${r}</b>を直撃！<br>${list.length?`🚧 ${list.map(edgeName).join('、')} が今月通行止め<br>`:''}${Object.keys(got).length?'お店の修理代：<br>'+Object.keys(got).map(o=>`<span style="color:${G.players[o].color}">●</span> ${esc(G.players[o].name)} <b style="color:#eb5757">-${fmt(got[o])}</b>`).join('<br>'):''}`,'🌀 台風');
+      for(const o in got) await pay(+o,got[o]);
+      break;}
+    case 'snow':{
+      const cids=cityIds(SNOW_CITIES), all=edgesTouching(cids,e=>e.kind==='road');
+      const list=all.sort(()=>Math.random()-.5).slice(0,rand(2,4));
+      closeEdges(list,1); focusNode(EDGES[list[0]].a); renderAll();
+      await news(`🌨️ 大雪で道路が通行止め！<br>🚧 ${list.map(edgeName).join('、')}<br><small>今月いっぱい通れないよ</small>`,'🌨️ 大雪');break;}
+    case 'work':{
+      const k=pick(EDGES.map((e,k)=>k).filter(k=>EDGES[k].kind==='road'&&EDGES[k].nodes.length));
+      closeEdges([k],2); focusNode(EDGES[k].a); renderAll();
+      await news(`🚧 道路工事のお知らせ<br><b>${edgeName(k)}</b> が2か月間 通行止めになります`,'🚧 道路工事');break;}
+    case 'oil':{
+      const up=Math.random()<.55; G.fx.oil=up?1.8:.5; G.fx.oilUntil=mi()+2; renderAll();
+      await news(up?`🛢️ 原油価格が高騰！ 3か月間 ガソリン代が<b>1.8倍</b>に…<br><small>ガソリンスタンドのオーナーはウハウハ</small>`:`🛢️ 原油が値下がり！ 3か月間 ガソリン代が<b>半額</b>！`,'🛢️ 原油価格');break;}
+    case 'sale':{
+      G.fx.sale=mi(); renderAll();
+      await news(`🎉 全国のカーディーラーで<b>新車フェア</b>！<br>今月はどの車も<b>3割引き</b>（${DEALERS.join('・')}）`,'🎉 新車フェア');break;}
+    case 'boom':{
+      const c=pick(CITY_NODES), n=NODES[c], up=Math.random()<.7;
+      G.pm[c]=Math.min(3,Math.max(.5,(G.pm[c]||1)*(up?1.4:.75))); applyPrices(); focusNode(c); renderAll();
+      await news(up?`📈 <b>${n.name}</b>に新しい高速道路ができて大人気！<br>${n.name}のお店の値段と収益が<b>1.4倍</b>に上がった！`:`📉 <b>${n.name}</b>の近くにバイパスができて、お客さんが素通り…<br>${n.name}のお店の値段と収益が<b>0.75倍</b>に下がった`,up?'📈 地価上昇':'📉 地価下落');break;}
+    case 'lottery':{
+      const j=rand(0,G.players.length-1), v=round100(rand(20,60)*100*yf()); G.players[j].money+=v; renderAll();
+      await news(`🎫 サービスエリアの福引きで <b>${esc(G.players[j].name)}</b> が特賞！<br><b style="color:#2f80ed">${fmt(v)}</b> ゲット！`,'🎫 福引き');break;}
+    case 'summer':{
+      const body=ownersPayout(SHOPS.filter(s=>/海|ビーチ|リゾート|かき氷|白くま|キャンプ/.test(s.name)).map(s=>s.id),.6,'に夏の売上');
+      renderAll();
+      await news(`🏖️ 猛暑で海やキャンプ場が大にぎわい！<br>${body}`,'🏖️ 夏休み');break;}
+  }
+  renderAll();
 }
 
 /* 決算・終了 */
