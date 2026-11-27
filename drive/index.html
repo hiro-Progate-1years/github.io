@@ -543,7 +543,7 @@ const MEIBUTSU = {'稚内':'昆布','網走':'ホタテ','旭川':'木の家具'
 const COLORS = ['#e8453c','#2f7fe0','#27ae60','#f39c12'];
 const PNAMES = ['あなた','CPUたろう','CPUはなこ','CPUじろう'];
 const HAND_MAX = 8;
-const SAVE_KEY = 'nippon-drive-save-v6';
+const SAVE_KEY = 'nippon-drive-save-v7';
 
 /* =========================================================
    マップ生成（固定シードで毎回同じ）
@@ -556,13 +556,15 @@ const EDGES = [];   // 描画用 {a,b,kind,cx,cy}
 const CITY_BY_NAME = {};
 const CITY_NODES = [];
 const SHOPS = [];   // {id,city,name,price,rate}
+// 収益率：安いご当地のお店ほど高利回り、大きな物件は率は低いが額が大きい（ガソリンスタンドは別）
+function boostRate(p,r){const m=p<=1500?7:p<=3000?5.5:p<=6000?4:p<=10000?3:p<=30000?2.2:1.8;return Math.min(100,Math.round(r*m))}
 function addNode(o){o.id=NODES.length;NODES.push(o);ADJ.push([]);return o.id}
 function link(a,b){ADJ[a].push(b);ADJ[b].push(a)}
 CITY_DATA.forEach(([name,lon,lat,shops])=>{
   const [x,y]=proj(lon,lat);
   const id=addNode({x,y,type:'city',name,shops:[]});
   CITY_BY_NAME[name]=id; CITY_NODES.push(id);
-  shops.forEach(([n,p,r])=>{const sid=SHOPS.length;SHOPS.push({id:sid,city:id,name:n,price:p,rate:r});NODES[id].shops.push(sid)});
+  shops.forEach(([n,p,r])=>{const sid=SHOPS.length;SHOPS.push({id:sid,city:id,name:n,price:p,rate:boostRate(p,r)});NODES[id].shops.push(sid)});
 });
 ROADS.forEach(([an,bn,kind,wps])=>{
   kind=kind||'road';
@@ -587,7 +589,7 @@ ROADS.forEach(([an,bn,kind,wps])=>{
 // 追加のお店とガソリンスタンド（道の数が多い都市ほど高い）
 CITY_NODES.forEach(c=>{
   const n=NODES[c];
-  (EXTRA_SHOPS[n.name]||[]).forEach(([nm,p,r])=>{const sid=SHOPS.length;SHOPS.push({id:sid,city:c,name:nm,price:p,rate:r});n.shops.push(sid)});
+  (EXTRA_SHOPS[n.name]||[]).forEach(([nm,p,r])=>{const sid=SHOPS.length;SHOPS.push({id:sid,city:c,name:nm,price:p,rate:boostRate(p,r)});n.shops.push(sid)});
   n.shops.sort((a,b)=>SHOPS[a].price-SHOPS[b].price);
   const deg=EDGES.filter(e=>e.a===c||e.b===c).length;
   const sid=SHOPS.length; SHOPS.push({id:sid,city:c,name:'⛽ガソリンスタンド',price:1500+deg*1500,rate:2,gas:true}); n.shops.push(sid);
