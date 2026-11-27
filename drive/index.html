@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>ニッポン爆走ドライブ</title>
 <style>
 :root{
@@ -42,7 +42,7 @@ button.primary:active{transform:translateY(2px);box-shadow:0 1px 0 #c57f00}
 
 /* ---------- ゲーム画面 ---------- */
 #game{position:fixed;inset:0;display:flex;flex-direction:column}
-#top{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#263445;color:#fff;flex:none}
+#top{display:flex;align-items:center;gap:10px;padding:calc(8px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 8px max(12px,env(safe-area-inset-left,0px));background:#263445;color:#fff;flex:none}
 #top .date{font-weight:800;font-size:18px;white-space:nowrap}
 #top .dest{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #top .dest b{color:#ffd76a;font-size:17px}
@@ -63,12 +63,12 @@ button.primary:active{transform:translateY(2px);box-shadow:0 1px 0 #c57f00}
 .pc .meta{color:var(--sub)}
 #log{flex:1;overflow:auto;border-top:1px solid #eee;padding:8px 10px;font-size:12px;color:var(--sub);line-height:1.6}
 #log div{border-bottom:1px dashed #eee;padding:2px 0}
-#actions{flex:none;background:#fff;border-top:1px solid #e3e3e3;padding:10px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;min-height:62px;align-items:center}
+#actions{flex:none;background:#fff;border-top:1px solid #e3e3e3;padding:10px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;min-height:62px;align-items:center;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
 #actions .hint{width:100%;text-align:center;font-weight:700;font-size:14px}
 #actions .big{font-size:18px;padding:12px 22px}
 #actions .endbtn{font-size:13px;padding:8px 10px;border:2px solid #ddd;background:#fff}
 #actions .endbtn small{display:block;font-weight:400;color:var(--sub);font-size:11px}
-#mapCtrls{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:6px}
+#mapCtrls{position:absolute;right:max(10px,env(safe-area-inset-right,0px));bottom:10px;display:flex;flex-direction:column;gap:6px}
 #mapCtrls button{width:42px;height:42px;padding:0;font-size:20px;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.2)}
 #toast{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:rgba(20,28,38,.88);color:#fff;padding:10px 18px;border-radius:14px;font-weight:700;font-size:16px;max-width:92%;text-align:center;pointer-events:none;opacity:0;transition:opacity .2s}
 #toast.show{opacity:1}
@@ -124,7 +124,7 @@ button.primary:active{transform:translateY(2px);box-shadow:0 1px 0 #c57f00}
   #top .date{font-size:15px}
   #top .dest{font-size:12px}
   #dice .d{width:56px;height:56px;padding:8px}
-  #actions{max-height:38vh;overflow:auto;padding:8px;gap:6px}
+  #actions{max-height:38vh;overflow:auto;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px));gap:6px}
   #actions .hint{font-size:12px}
   #actions .endbtn{font-size:12px;padding:6px 8px}
   #actions .endbtn small{font-size:10px}
@@ -448,15 +448,26 @@ function applyCam(){
 function focusNode(node){const n=NODES[node];camT.x=n.x;camT.y=n.y}
 function setZoom(z){camT.z=Math.min(2.6,Math.max(.3,z))}
 (function setupPan(){
-  let drag=null;
-  svg.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,cx:camT.x,cy:camT.y,moved:false};svg.setPointerCapture(e.pointerId)});
+  let drag=null, pinch=null;
+  const pts=new Map();
+  const pdist=()=>{const [a,b]=[...pts.values()];return Math.hypot(a.x-b.x,a.y-b.y)||1};
+  svg.addEventListener('pointerdown',e=>{
+    pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    try{svg.setPointerCapture(e.pointerId)}catch(_){}
+    if(pts.size===2){pinch={d:pdist(),z:camT.z};drag=null;return}
+    drag={x:e.clientX,y:e.clientY,cx:camT.x,cy:camT.y,moved:false};
+  });
   svg.addEventListener('pointermove',e=>{
+    if(pts.has(e.pointerId)) pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pinch && pts.size===2){setZoom(pinch.z*pdist()/pinch.d);cam.z=camT.z;return}
     if(!drag) return;
     const dx=e.clientX-drag.x, dy=e.clientY-drag.y;
     if(Math.hypot(dx,dy)>6){drag.moved=true;svg.classList.add('dragging')}
     if(drag.moved){camT.x=cam.x=drag.cx-dx/cam.z;camT.y=cam.y=drag.cy-dy/cam.z}
   });
   const up=e=>{
+    pts.delete(e.pointerId);
+    if(pinch){if(pts.size<2)pinch=null;drag=null;svg.classList.remove('dragging');return}
     if(drag && !drag.moved){
       // クリック判定（ポインタキャプチャで target が svg になるため座標から判定）
       const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;
@@ -465,7 +476,7 @@ function setZoom(z){camT.z=Math.min(2.6,Math.max(.3,z))}
     }
     drag=null;svg.classList.remove('dragging');
   };
-  svg.addEventListener('pointerup',up); svg.addEventListener('pointercancel',()=>{drag=null;svg.classList.remove('dragging')});
+  svg.addEventListener('pointerup',up); svg.addEventListener('pointercancel',e=>{pts.delete(e.pointerId);pinch=null;drag=null;svg.classList.remove('dragging')});
   svg.addEventListener('wheel',e=>{e.preventDefault();setZoom(camT.z*(e.deltaY<0?1.15:1/1.15))},{passive:false});
   $('#zIn').onclick=()=>setZoom(camT.z*1.3);
   $('#zOut').onclick=()=>setZoom(camT.z/1.3);
