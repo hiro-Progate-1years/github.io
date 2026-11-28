@@ -200,6 +200,8 @@ button.primary:active{transform:translateY(2px);box-shadow:0 1px 0 #c57f00}
 .shop .n{flex:1;min-width:0}
 .shop .n b{display:block}
 .shop .n small{color:var(--sub)}
+.shop.pend,.job.pend{background:#fff6dd;border-radius:10px;padding:8px;margin:2px -8px}
+.cf{display:flex;gap:6px;flex:none}
 .shop .own{font-size:12px;font-weight:700;padding:4px 8px;border-radius:8px;color:#fff;white-space:nowrap}
 .tbl{width:100%;border-collapse:collapse;font-size:14px}
 .tbl td,.tbl th{padding:6px 4px;border-bottom:1px solid #eee;text-align:right}
@@ -1666,12 +1668,14 @@ async function arrive(i){
 
 /* 物件 */
 function buyPrice(i,sid){return G.players[i].coupon?round100(SHOPS[sid].price/2):SHOPS[sid].price}
-function shopRow(sid,i){
+function shopRow(sid,i,pend){
   const s=SHOPS[sid], o=G.owner[sid], p=G.players[i];
   const inc=Math.round(s.price*s.rate/100);
   let right;
   if(o!=null) right=`<span class="own" style="background:${G.players[o].color}">${esc(G.players[o].name)}</span>`;
+  else if(pend===sid) right=`<span class="cf"><button data-no="1">やめる</button><button class="primary" data-ok="${sid}">買う</button></span>`;
   else right=`<button class="primary" data-buy="${sid}" ${p.money<buyPrice(i,sid)?'disabled':''}>${p.coupon?'半額 '+fmt(buyPrice(i,sid)):'買う'}</button>`;
+  if(pend===sid) return `<div class="shop pend"><div class="n"><b>「${s.name}」を ${fmt(buyPrice(i,sid))} で買う？</b><small>所持金 ${fmt(p.money)} → ${fmt(p.money-buyPrice(i,sid))}　年${fmt(inc)}の収益</small></div>${right}</div>`;
   return `<div class="shop"><div class="n"><b>${s.name}</b><small>${fmt(s.price)}　収益率${s.rate}%（年${fmt(inc)}）${s.gas?'<br>＋ライバルがここで給油すると手数料が入る／ガス欠のとき無料レッカー':''}</small></div>${right}</div>`;
 }
 async function cityVisit(i,node){
@@ -1684,14 +1688,14 @@ async function cityVisit(i,node){
 function cityShop(i,node){
   const n=NODES[node], p=G.players[i];
   const jobs=makeJobs(node), dealer=DEALERS.includes(n.name);
-  let tab='shop';
+  let tab='shop', pend=null, pendCar=null;
   return modal({title:`🏙️ ${n.name}`,buttons:[{label:'出発する',value:true,cls:'primary'}],render:(body)=>{
     const draw=()=>{
       const mono=monopolyOwner(node), cap=CARS[p.car].cargo;
       let h=`<div class="tabs"><button data-t="shop" class="${tab==='shop'?'on':''}">🏪 お店</button><button data-t="job" class="${tab==='job'?'on':''}">📦 配達の依頼</button>${dealer?`<button data-t="car" class="${tab==='car'?'on':''}">🚙 車を買う</button>`:''}</div>
         <p style="margin:0 0 6px">所持金 <b>${fmt(p.money)}</b>　⛽${p.fuel}/${CARS[p.car].tank}L　📦${p.jobs.length}/${cap}</p>`;
       if(tab==='shop'){
-        h+=`${mono>=0?`<p style="margin:0;color:${G.players[mono].color}">★${esc(G.players[mono].name)}が独占中</p>`:''}${n.shops.map(s=>shopRow(s,i)).join('')}
+        h+=`${mono>=0?`<p style="margin:0;color:${G.players[mono].color}">★${esc(G.players[mono].name)}が独占中</p>`:''}${n.shops.map(s=>shopRow(s,i,pend)).join('')}
         <p style="font-size:12px;color:#888;margin-bottom:0">全部のお店を買うと独占！収益が2倍になるよ</p>`;
       }else if(tab==='job'){
         h+=`<p style="font-size:13px;color:#666;margin:0 0 4px">${n.name}の名産「${MEIBUTSU[n.name]}」を運んでほしい人がいるよ。届け先の都市を通るだけで配達完了！</p>`+
@@ -1704,13 +1708,17 @@ function cityShop(i,node){
         const trade=Math.round(CARS[p.car].price/2);
         h+=`${G.fx.sale===mi()?'<p style="margin:0 0 4px;color:#e8453c;font-weight:700">🎉 新車フェア開催中！ 全車3割引き</p>':''}<p style="font-size:13px;color:#666;margin:0 0 4px">今の車（${CARS[p.car].name}）は ${fmt(trade)} で下取り。買うと満タンでお渡し！</p>`+
         Object.keys(CARS).filter(k=>k!=='kei').map(k=>{const c=CARS[k], net=round100(c.price*yf())-trade, own=p.car===k, small=p.jobs.length>c.cargo||(p.pax||[]).length>c.seats-1;
+          if(pendCar===k) return `<div class="job pend"><div class="n"><b>${c.name}に ${fmt(net)} で乗りかえる？</b><small>所持金 ${fmt(p.money)} → ${fmt(p.money-net)}（今の車は下取り）</small></div>
+          <span class="cf"><button data-cno="1">やめる</button><button class="primary" data-cok="${k}">買う</button></span></div>`;
           return `<div class="job"><div class="n"><b>${c.name}</b><small>サイコロ${c.dice}個・タンク${c.tank}L・荷物${c.cargo}・定員${c.seats}人<br>${c.desc}</small></div>
           <button class="primary" data-c="${k}" ${own||small||p.money<net?'disabled':''}>${own?'乗ってる':fmt(net)}</button></div>`}).join('');
       }
       body.innerHTML=h;
-      body.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{tab=b.dataset.t;draw()});
-      body.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{
-        const sid=+b.dataset.buy, s=SHOPS[sid];
+      body.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{tab=b.dataset.t;pend=pendCar=null;draw()});
+      body.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{pend=+b.dataset.buy;draw()});
+      body.querySelectorAll('[data-no]').forEach(b=>b.onclick=()=>{pend=null;draw()});
+      body.querySelectorAll('[data-ok]').forEach(b=>b.onclick=()=>{
+        const sid=+b.dataset.ok, s=SHOPS[sid]; pend=null;
         const cost=buyPrice(i,sid);
         if(p.money<cost||G.owner[sid]!=null)return;
         p.money-=cost; if(p.coupon)p.coupon--; G.owner[sid]=i; sfx('buy'); log(`🏪 ${p.name} が ${n.name}の${s.name}を購入`);
@@ -1722,7 +1730,9 @@ function cityShop(i,node){
         const j=jobs[+b.dataset.j]; if(p.jobs.length>=CARS[p.car].cargo||p.jobs.includes(j))return;
         p.jobs.push(j); log(`📦 ${p.name} が ${j.item}→${NODES[j.to].name} の配達を引き受けた`); renderAll(); draw();
       });
-      body.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{buyCar(i,b.dataset.c);draw()});
+      body.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{pendCar=b.dataset.c;draw()});
+      body.querySelectorAll('[data-cno]').forEach(b=>b.onclick=()=>{pendCar=null;draw()});
+      body.querySelectorAll('[data-cok]').forEach(b=>b.onclick=()=>{const k=b.dataset.cok;pendCar=null;if(buyCar(i,k)){sfx('buy');fxStamp(CARS[k].name+' 納車！','#2f7fe0',1500)}draw()});
     };
     draw();
   }});
